@@ -3,6 +3,7 @@
   "author": "carmnk",
   "version": "0.8.0",
   "type": "module",
+  "homepage": "https://carmnk.github.io/html_editor",
   "scripts": {
     "dev": "vite --host",
     "build": "tsc && vite build",
