@@ -102,7 +102,8 @@ export const HtmlEditor = () => {
                 icon={mdiPackageDown}
                 type="text"
                 onClick={handleRequestWebsiteZipBundle}
-                tooltip="Download Website Bundle"
+                tooltip="Download Website Bundle - Server is currently down"
+                disabled={true} // loading
               />
               <Button
                 iconButton={true}
