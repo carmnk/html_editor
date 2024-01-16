@@ -38,46 +38,48 @@ export type StyledTreeItemProps = Omit<TreeItemProps, "nodeId" | "children"> & {
   children?: StyledTreeItemProps[];
 };
 
-const StyledTreeItemRoot = styled(TreeItem)(({ theme }) => ({
-  color: theme.palette.text.secondary,
-  [`& .${treeItemClasses.content}`]: {
+const StyledTreeItemRoot = styled(TreeItem)<TreeItemProps & { nodeId: string }>(
+  ({ theme }) => ({
     color: theme.palette.text.secondary,
-    borderTopRightRadius: theme.spacing(2),
-    borderBottomRightRadius: theme.spacing(2),
-    paddingLeft: "4px !important",
-    paddingRight: "0 !important",
-    fontWeight: theme.typography.fontWeightMedium,
-    "&.Mui-expanded": {
-      fontWeight: theme.typography.fontWeightRegular,
-    },
-
-    "&:hover": {
-      backgroundColor: theme.palette.action.hover,
-    },
-    "&.Mui-focused, &.Mui-selected, &.Mui-selected.Mui-focused": {
-      backgroundColor: `var(--tree-view-bg-color, ${theme.palette.action.selected})`,
-      color: "var(--tree-view-color)",
-    },
-    [`& .${treeItemClasses.label}`]: {
-      fontWeight: "inherit",
-      color: "inherit",
-    },
-  },
-  [`& .${treeItemClasses.group}`]: {
-    marginLeft: 0,
-    paddingLeft: 8,
     [`& .${treeItemClasses.content}`]: {
-      paddingLeft: theme.spacing(2),
+      color: theme.palette.text.secondary,
+      borderTopRightRadius: theme.spacing(2),
+      borderBottomRightRadius: theme.spacing(2),
+      paddingLeft: "4px !important",
+      paddingRight: "0 !important",
+      fontWeight: theme.typography.fontWeightMedium,
+      "&.Mui-expanded": {
+        fontWeight: theme.typography.fontWeightRegular,
+      },
+
+      "&:hover": {
+        backgroundColor: theme.palette.action.hover,
+      },
+      "&.Mui-focused, &.Mui-selected, &.Mui-selected.Mui-focused": {
+        backgroundColor: `var(--tree-view-bg-color, ${theme.palette.action.selected})`,
+        color: "var(--tree-view-color)",
+      },
+      [`& .${treeItemClasses.label}`]: {
+        fontWeight: "inherit",
+        color: "inherit",
+      },
     },
-  },
-  "&.MuiTreeItem-group, &.MuiCollapse-root": {
-    marginLeft: "16px !important",
-  },
-})) as unknown as typeof TreeItem;
+    [`& .${treeItemClasses.group}`]: {
+      marginLeft: 0,
+      paddingLeft: 8,
+      [`& .${treeItemClasses.content}`]: {
+        paddingLeft: theme.spacing(2),
+      },
+    },
+    "&.MuiTreeItem-group, &.MuiCollapse-root": {
+      marginLeft: "16px !important",
+    },
+  })
+) as any;
 
 export const StyledTreeItem = React.forwardRef(function StyledTreeItem(
   props: StyledTreeItemProps,
-  ref: React.Ref<HTMLLIElement>
+  ref: React.Ref<HTMLUListElement>
 ) {
   const theme = useTheme();
   const {
