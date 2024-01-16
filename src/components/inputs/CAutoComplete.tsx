@@ -243,6 +243,8 @@ export const CAutoComplete = (props: CAutoCompleteProps) => {
     isFocussed.current = true;
   }, []);
 
+  console.log("AC  name: ", name, " - ", options);
+
   return (
     <FormControl className="flex flex-col w-full" {...ContainerProps}>
       {!disableLabel && (
@@ -273,6 +275,7 @@ export const CAutoComplete = (props: CAutoCompleteProps) => {
         size="small"
         sx={inputStyles}
         renderOption={renderOption}
+        slotProps={{ popper: { sx: { zIndex: 999999 } } }}
       />
       {!disableHelperText && (
         <FormHelperText sx={formHelperTextStyles}>

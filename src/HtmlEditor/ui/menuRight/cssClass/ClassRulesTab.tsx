@@ -64,6 +64,8 @@ export const ClassRulesTab = (props: RightMenuContentTabProps) => {
     );
   }, [editorState.ui.detailsMenu.ruleName]);
 
+  console.log("OPTS", ruleValueOptions, CSS_RULE_NAMES_OPTIONS);
+
   return (
     <>
       {/* Rules */}

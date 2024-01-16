@@ -164,6 +164,7 @@ export const StyledTreeItem = React.forwardRef(function StyledTreeItem(
                   iconButton={true}
                   icon={mdiDelete}
                   onClick={(e) => {
+                    console.log("WHY NOT DELETE? ", nodeId, onDelete);
                     e.stopPropagation();
                     !!nodeId && onDelete?.(nodeId as any);
                   }}

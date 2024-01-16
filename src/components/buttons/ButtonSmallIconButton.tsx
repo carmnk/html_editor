@@ -10,7 +10,6 @@ export const ButtonSmallIconButton = (props: CButtonProps) => (
   <Button
     iconButton={true}
     icon={mdiPackage}
-    disabled={true}
     sx={{ ...styles, ...(props?.sx ?? {}) }}
     {...props}
   />

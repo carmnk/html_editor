@@ -159,13 +159,26 @@ export const CTextField = forwardRef((props: CTextFieldProps, ref) => {
     };
   }, [disableHelperText, rest]);
 
+  const labelStyle = useMemo(() => {
+    return {
+      ...(labelSx ?? {}),
+      pb: 0.5,
+      // pr: 0.25
+    };
+  }, [labelSx]);
+
   return (
-    <Box className="relative flex flex-col w-full" {...(ContainerProps ?? {})}>
+    <Box
+      position="relative"
+      display="flex"
+      flexDirection="column"
+      width="100%"
+      {...(ContainerProps ?? {})}
+    >
       {!disableLabel && (
         <Label
-          className="pb-2 pl-0.5"
           style={isError ? { color: theme.palette.error.main } : {}}
-          sx={labelSx}
+          sx={labelStyle}
         >
           {label} {required && <strong style={themeErrorText}>*</strong>}
         </Label>

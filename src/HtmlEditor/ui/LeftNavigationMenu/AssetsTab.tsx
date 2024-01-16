@@ -25,6 +25,7 @@ export const AssetsTab = (props: AssetsTabProps) => {
     ).map((imageWs) => {
       const imageData = editorState.imageWorkspaces[imageWs];
       return {
+        key: imageWs,
         nodeId: imageWs,
         labelText: imageWs,
         disableAddAction: true, // false!

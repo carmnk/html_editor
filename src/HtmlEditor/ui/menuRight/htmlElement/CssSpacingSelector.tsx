@@ -17,37 +17,37 @@ export const StyleSpacingSelector = (props: StyleSpacingSelectorProps) => {
     return {
       marginTop: (e: ChangeEvent<HTMLInputElement>) => {
         const newValue = e?.target?.value?.replace(/\D/g, "");
-        changeCurrentHtmlElementStyleAttribute("marginTop", newValue + "px");
+        changeCurrentHtmlElementStyleAttribute(newValue + "px", "marginTop");
       },
       marginLeft: (e: ChangeEvent<HTMLInputElement>) => {
         const newValue = e?.target?.value?.replace(/\D/g, "");
-        changeCurrentHtmlElementStyleAttribute("marginLeft", newValue + "px");
+        changeCurrentHtmlElementStyleAttribute(newValue + "px", "marginLeft");
       },
       marginRight: (e: ChangeEvent<HTMLInputElement>) => {
         const newValue = e?.target?.value?.replace(/\D/g, "");
-        changeCurrentHtmlElementStyleAttribute("marginRight", newValue + "px");
+        changeCurrentHtmlElementStyleAttribute(newValue + "px", "marginRight");
       },
       marginBottom: (e: ChangeEvent<HTMLInputElement>) => {
         const newValue = e?.target?.value?.replace(/\D/g, "");
-        changeCurrentHtmlElementStyleAttribute("marginBottom", newValue + "px");
+        changeCurrentHtmlElementStyleAttribute(newValue + "px", "marginBottom");
       },
       paddingTop: (e: ChangeEvent<HTMLInputElement>) => {
         const newValue = e?.target?.value?.replace(/\D/g, "");
-        changeCurrentHtmlElementStyleAttribute("paddingTop", newValue + "px");
+        changeCurrentHtmlElementStyleAttribute(newValue + "px", "paddingTop");
       },
       paddingLeft: (e: ChangeEvent<HTMLInputElement>) => {
         const newValue = e?.target?.value?.replace(/\D/g, "");
-        changeCurrentHtmlElementStyleAttribute("paddingLeft", newValue + "px");
+        changeCurrentHtmlElementStyleAttribute(newValue + "px", "paddingLeft");
       },
       paddingRight: (e: ChangeEvent<HTMLInputElement>) => {
         const newValue = e?.target?.value?.replace(/\D/g, "");
-        changeCurrentHtmlElementStyleAttribute("paddingRight", newValue + "px");
+        changeCurrentHtmlElementStyleAttribute(newValue + "px", "paddingRight");
       },
       paddingBottom: (e: ChangeEvent<HTMLInputElement>) => {
         const newValue = e?.target?.value?.replace(/\D/g, "");
         changeCurrentHtmlElementStyleAttribute(
-          "paddingBottom",
-          newValue + "px"
+          newValue + "px",
+          "paddingBottom"
         );
       },
     };

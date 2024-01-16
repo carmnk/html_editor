@@ -47,6 +47,7 @@ export type EditorControllerType = {
       saveProject: () => void;
       handleLoadProject: (e: ChangeEvent<HTMLInputElement>) => void;
       addHtmlPage: () => void;
+      removeHtmlPage: (pageName: string) => void;
     };
     htmlElement: {
       handleDeleteHtmlElement: (newValue: string) => void;
@@ -296,8 +297,7 @@ export const useEditorController = (): EditorControllerType => {
     [editorState.selectedImage, setEditorState]
   );
 
-
-  const handleChangeTab = useCallback(
+  const handleChangeHtmlElementStyleTab = useCallback(
     (newValue: string) => {
       const newValueTyped = newValue as "layout" | "shape" | "typography";
       setEditorState((current) => ({
@@ -337,7 +337,7 @@ export const useEditorController = (): EditorControllerType => {
     [setEditorState]
   );
 
-  const handleAddHtmlPage = useCallback(() => {
+  const addHtmlPage = useCallback(() => {
     setEditorState((current) => {
       const newPageName =
         `newPage` +
@@ -356,6 +356,18 @@ export const useEditorController = (): EditorControllerType => {
       };
     });
   }, [setEditorState]);
+
+  const removeHtmlPage = useCallback((pageName: string) => {
+    setEditorState((current) => {
+      const { [pageName]: _nOut, ...htmlPagesExDeleteItem } = current.htmlPages;
+      return {
+        ...current,
+        htmlPages: htmlPagesExDeleteItem,
+        selectedPage:
+          current.selectedPage === pageName ? "index" : current.selectedPage,
+      };
+    });
+  }, []);
 
   const handleSelectHtmlPage = useCallback(
     (newValue: string) => {
@@ -481,7 +493,8 @@ export const useEditorController = (): EditorControllerType => {
       project: {
         saveProject,
         handleLoadProject,
-        addHtmlPage: handleAddHtmlPage,
+        addHtmlPage,
+        removeHtmlPage,
       },
       htmlElement: htmlElementActions,
       cssSelector: cssSelectorActions,
@@ -501,7 +514,7 @@ export const useEditorController = (): EditorControllerType => {
         },
         detailsMenu: {
           handleSelectHtmlElementCssPropertiesListFilter,
-          handleChangeHtmlElementStyleTab: handleChangeTab,
+          handleChangeHtmlElementStyleTab,
         },
       },
     },

@@ -176,6 +176,7 @@ export const HtmlElementMenu = (props: HtmlElementMenuProps) => {
         {selectedHtmlElement?.type === "img" && (
           <Box>
             <CAutoComplete
+              label="src"
               name="img_src"
               options={imageSrcOptions}
               value={
@@ -192,6 +193,7 @@ export const HtmlElementMenu = (props: HtmlElementMenuProps) => {
         {selectedHtmlElement?.type === "a" && (
           <Box>
             <CTextField
+              label="href"
               name="a_href"
               value={selectedHtmlElementStyleIntersection?.attributes?.href}
               onChange={handleChangeLinkHref}

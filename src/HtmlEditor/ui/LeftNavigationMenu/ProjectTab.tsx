@@ -4,6 +4,7 @@ import { mdiFileDocument } from "@mdi/js";
 import { useMemo } from "react";
 import { ButtonSmallIconButton } from "../../../components/buttons/ButtonSmallIconButton";
 import { EditorControllerType } from "../../editorController";
+import { StyledTreeItemProps } from "../../../components/treeview/CTreeItem";
 
 export type ProjectTabProps = {
   editorController: EditorControllerType;
@@ -13,11 +14,14 @@ export const ProjectTab = (props: ProjectTabProps) => {
   const { editorController } = props;
   const { editorState, actions } = editorController;
   const { handleSelectHtmlPage } = actions.ui;
-  const { addHtmlPage } = actions.project;
+  const { addHtmlPage, removeHtmlPage } = actions.project;
 
   const pagesTreeItems = useMemo(() => {
-    const treeItems = Object.keys(editorState.htmlPages).map((pageName) => {
+    const treeItems: StyledTreeItemProps[] = Object.keys(
+      editorState.htmlPages
+    ).map((pageName) => {
       return {
+        key: pageName,
         nodeId: pageName,
         labelText: pageName,
         disableAddAction: true,
@@ -52,6 +56,7 @@ export const ProjectTab = (props: ProjectTabProps) => {
           items={pagesTreeItems}
           onToggleExpand={handleSelectHtmlPage}
           maxWidth={220}
+          onDelete={removeHtmlPage}
         />
       </Box>
     </>

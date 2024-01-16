@@ -19,7 +19,9 @@ export const CssTab = (props: CssTabProps) => {
     const pagesTreeItems = Object.keys(editorState.cssWorkspaces).map(
       (wsKey) => {
         const ws = editorState.cssWorkspaces[wsKey];
+        console.log("CSS ", wsKey);
         return {
+          key: wsKey,
           nodeId: wsKey,
           labelText: wsKey,
           disableAddAction: false,
