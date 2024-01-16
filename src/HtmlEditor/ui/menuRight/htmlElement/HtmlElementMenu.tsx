@@ -50,9 +50,10 @@ export const HtmlElementMenu = (props: HtmlElementMenuProps) => {
     return makeHtmlElementMenuTabs({ theme, selectedHtmlElement });
   }, [theme, selectedHtmlElement]);
 
+  const trimmedClassName = selectedHtmlElement?.attributes?.className?.trim();
   const classNames: string[] | null = useMemo(
-    () => selectedHtmlElement?.attributes?.className?.split?.(" ") || null,
-    [selectedHtmlElement?.attributes?.className]
+    () => (trimmedClassName ? trimmedClassName?.split?.(" ") || null : null),
+    [trimmedClassName]
   );
   const classNameOptions = useMemo(
     () =>
@@ -110,6 +111,16 @@ export const HtmlElementMenu = (props: HtmlElementMenuProps) => {
     },
     [classNames, handleChangeElementClasses]
   );
+
+  const handleRemoveClass = React.useCallback(
+    (classname: string) => {
+      const newClassNames = classNames?.filter((cn) => cn !== classname);
+      const newClassName = newClassNames?.join(" ") ?? "";
+      handleChangeElementClasses(newClassName);
+    },
+    [classNames, handleChangeElementClasses]
+  );
+  console.log(classNames);
 
   const handleChangeImageSource = React.useCallback(
     (newValue: string) => {
@@ -210,7 +221,11 @@ export const HtmlElementMenu = (props: HtmlElementMenuProps) => {
           <Typography>Classes</Typography>
           <Stack direction="row" alignItems="center" gap={1} flexWrap="wrap">
             {classNames?.map?.((className) => (
-              <Chip label={className} size="small" />
+              <Chip
+                label={className}
+                size="small"
+                onDelete={() => handleRemoveClass(className)}
+              />
             )) || <Chip label="No classes" color="default" size="small" />}
             <Box>
               <ClickTextField
