@@ -4,7 +4,7 @@ import {
   CTreeViewProps,
 } from "../../../components/treeview/CTreeView";
 import { mdiFolder, mdiImage, mdiPackage } from "@mdi/js";
-import { EditorControllerType } from "../../editorController";
+import { EditorControllerType } from "../../editorController/editorController";
 import { useEffect, useMemo } from "react";
 import { FileUploader } from "../../../components/inputs/CFileUploader";
 import { ButtonSmallIconButton } from "../../../components/buttons/ButtonSmallIconButton";
@@ -43,8 +43,8 @@ export const AssetsTab = (props: AssetsTabProps) => {
     return {
       items: workspaceImageTreeItems,
       expandedItems: ["common"],
-      maxWidth: 220,
-      onToggleExpand: (newValue: string) => {
+      // maxWidth: 220,
+      onToggleSelect: (newValue: string) => {
         handleSelectImage(newValue);
       },
       onDelete: handleDeleteImageFile,
@@ -63,9 +63,15 @@ export const AssetsTab = (props: AssetsTabProps) => {
   }, []);
 
   return (
-    <Stack height="100%">
-      <Box flexGrow={1}>
-        <Box mt={0.5} ml={1}>
+    <Stack
+      gap={2}
+      // borderLeft={"1px solid " + theme.palette.divider}
+      height="100%"
+      pr={2}
+      width={320}
+    >
+      <Box flexGrow={1} mt={0.5} ml={1}>
+        <Box>
           <Stack
             direction="row"
             justifyContent="space-between"
@@ -86,7 +92,7 @@ export const AssetsTab = (props: AssetsTabProps) => {
             </Stack>
           </Stack>
         </Box>
-        <Box ml={0.5}>
+        <Box ml={0.5} mt={2}>
           <CTreeView {...treeViewProps} />
         </Box>
       </Box>

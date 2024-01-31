@@ -51,7 +51,7 @@ export enum HTML_TAG_NAMES_TABLE_CONTENT {
   Tr = "tr",
 }
 
-export enum HTML_TAG_NAMES_BASE_ELEMENTS {
+export enum HTML_TAG_NAMES_DOCUMENT_ELEMENTS {
   Html = "html",
   Head = "head",
   Body = "body",
@@ -142,19 +142,63 @@ export enum HTML_TAG_NAMES_BASIC {
 }
 
 export const HTML_TAG_NAMES = {
-  ...HTML_TAG_NAMES_EMBEDDED_CONTENT,
-  ...HTML_TAG_NAMES_INTERACTIVE_CONTENT,
   ...HTML_TAG_NAMES_TABLE_CONTENT,
-  ...HTML_TAG_NAMES_BASE_ELEMENTS,
+  ...HTML_TAG_NAMES_INTERACTIVE_CONTENT,
+  ...HTML_TAG_NAMES_EMBEDDED_CONTENT,
+  ...HTML_TAG_NAMES_METADATA_ELEMENTS,
+  ...HTML_TAG_NAMES_DOCUMENT_ELEMENTS,
+
+  ...HTML_TAG_NAMES_BASIC,
   ...HTML_TAG_NAMES_LAYOUT_ELEMENTS,
   ...HTML_TAG_NAMES_HEADING_ELEMENTS,
-  ...HTML_TAG_NAMES_METADATA_ELEMENTS,
-  ...HTML_TAG_NAMES_LIST_ELEMENTS,
   ...HTML_TAG_NAMES_FORMATTING_ELEMENTS,
-  ...HTML_TAG_NAMES_BASIC,
+  ...HTML_TAG_NAMES_LIST_ELEMENTS,
 };
 
 export const HTML_TAG_NAMES_BASIC_OPTIONS =
   makeOptionsFromEnum(HTML_TAG_NAMES_BASIC);
 
 export const HTML_TAG_NAMES_OPTIONS = makeOptionsFromEnum(HTML_TAG_NAMES);
+
+export const HTML_TAG_NAMES_STRUCTURED_OPTIONS = [
+  ...makeOptionsFromEnum(HTML_TAG_NAMES_BASIC).map((item) => ({
+    ...item,
+    category: "basic",
+  })),
+  ...makeOptionsFromEnum(HTML_TAG_NAMES_LAYOUT_ELEMENTS).map((item) => ({
+    ...item,
+    category: "Layout",
+  })),
+  ...makeOptionsFromEnum(HTML_TAG_NAMES_HEADING_ELEMENTS).map((item) => ({
+    ...item,
+    category: "Headings",
+  })),
+  ...makeOptionsFromEnum(HTML_TAG_NAMES_FORMATTING_ELEMENTS).map((item) => ({
+    ...item,
+    category: "Formatting",
+  })),
+  ...makeOptionsFromEnum(HTML_TAG_NAMES_LIST_ELEMENTS).map((item) => ({
+    ...item,
+    category: "Lists",
+  })),
+  ...makeOptionsFromEnum(HTML_TAG_NAMES_TABLE_CONTENT).map((item) => ({
+    ...item,
+    category: "Table",
+  })),
+  ...makeOptionsFromEnum(HTML_TAG_NAMES_INTERACTIVE_CONTENT).map((item) => ({
+    ...item,
+    category: "Interactive Content",
+  })),
+  ...makeOptionsFromEnum(HTML_TAG_NAMES_EMBEDDED_CONTENT).map((item) => ({
+    ...item,
+    category: "Embedded Content",
+  })),
+  ...makeOptionsFromEnum(HTML_TAG_NAMES_METADATA_ELEMENTS).map((item) => ({
+    ...item,
+    category: "Meta Data",
+  })),
+  ...makeOptionsFromEnum(HTML_TAG_NAMES_DOCUMENT_ELEMENTS).map((item) => ({
+    ...item,
+    category: "HTML Document",
+  })),
+];

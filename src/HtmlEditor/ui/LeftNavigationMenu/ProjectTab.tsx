@@ -1,9 +1,13 @@
 import { Box, Stack, Typography } from "@mui/material";
-import { CTreeView } from "../../../components/treeview/CTreeView";
-import { mdiFileDocument } from "@mdi/js";
+import {
+  AdditionalActionType,
+  CTreeView,
+  CTreeViewProps,
+} from "../../../components/treeview/CTreeView";
+import { mdiContentDuplicate, mdiDelete, mdiFile } from "@mdi/js";
 import { useMemo } from "react";
 import { ButtonSmallIconButton } from "../../../components/buttons/ButtonSmallIconButton";
-import { EditorControllerType } from "../../editorController";
+import { EditorControllerType } from "../../editorController/editorController";
 import { StyledTreeItemProps } from "../../../components/treeview/CTreeItem";
 
 export type ProjectTabProps = {
@@ -16,7 +20,7 @@ export const ProjectTab = (props: ProjectTabProps) => {
   const { handleSelectHtmlPage } = actions.ui;
   const { addHtmlPage, removeHtmlPage } = actions.project;
 
-  const pagesTreeItems = useMemo(() => {
+  const pagesTreeViewProps: CTreeViewProps = useMemo(() => {
     const treeItems: StyledTreeItemProps[] = Object.keys(
       editorState.htmlPages
     ).map((pageName) => {
@@ -26,14 +30,43 @@ export const ProjectTab = (props: ProjectTabProps) => {
         labelText: pageName,
         disableAddAction: true,
         disableDeleteAction: pageName === "index",
-        icon: mdiFileDocument,
+        icon: mdiFile,
       };
     });
-    return treeItems;
-  }, [editorState.htmlPages]);
+    return {
+      items: treeItems,
+      onToggleSelect: handleSelectHtmlPage,
+      onDelete: removeHtmlPage,
+      // actions: [{i}],
+      additionalActions: (item: any) => {
+        const nodeId = item.nodeId;
+        const baseActions: AdditionalActionType[] = [
+          {
+            icon: mdiContentDuplicate,
+            label: "Duplicate Page",
+            tooltip: "Duplicate Page",
+            action: () => {
+              alert("NOT YET IMPLEMENTED");
+            },
+          },
+        ];
+        return item.nodeId === "index"
+          ? [...baseActions]
+          : [
+              ...baseActions,
+              {
+                icon: mdiDelete,
+                tooltip: "Delete Page",
+                label: "Delete Page",
+                action: () => removeHtmlPage(nodeId),
+              },
+            ];
+      },
+    };
+  }, [editorState.htmlPages, handleSelectHtmlPage, removeHtmlPage]);
 
   return (
-    <>
+    <Stack gap={2} height="100%" pr={2} width={320}>
       <Box mt={0.5} ml={1}>
         <Stack
           direction="row"
@@ -45,20 +78,15 @@ export const ProjectTab = (props: ProjectTabProps) => {
           </Box>
 
           <ButtonSmallIconButton
-            tooltip="Add HTML Page"
-            icon={mdiFileDocument}
+            tooltip="Add new Page"
+            icon={mdiFile}
             onClick={addHtmlPage}
           />
         </Stack>
       </Box>
       <Box ml={0.5}>
-        <CTreeView
-          items={pagesTreeItems}
-          onToggleExpand={handleSelectHtmlPage}
-          maxWidth={220}
-          onDelete={removeHtmlPage}
-        />
+        <CTreeView {...pagesTreeViewProps} />
       </Box>
-    </>
+    </Stack>
   );
 };

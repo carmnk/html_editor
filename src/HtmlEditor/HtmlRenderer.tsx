@@ -4,6 +4,7 @@ import { EditorStateType } from "./EditorState.tsx";
 import { renderHtmlElements } from "./renderElements.tsx";
 import siteProps from "../site_props.json";
 import { Route, Routes } from "react-router-dom";
+import { useEditorController } from "./editorController/editorController.tsx";
 
 export const HtmlRenderer = () => {
   const handleSelectElement = React.useCallback(() => {}, []);
@@ -15,20 +16,23 @@ export const HtmlRenderer = () => {
     };
   }, []);
 
-  const [editorState] = React.useState(
-    initialState as unknown as EditorStateType
-  );
+  // CHECK IF STH IS LOST!!!
+  // const [editorState] = React.useState(
+  //   initialState as unknown as EditorStateType
+  // );
+  const editorController = useEditorController();
+  const { editorState } = editorController;
 
   const renderPage = React.useCallback(
     (page: string) => {
       return renderHtmlElements(
         editorState.htmlPages[page],
-        editorState,
+        editorController,
         handleSelectElement,
         true
       );
     },
-    [editorState, handleSelectElement]
+    [editorState, editorController, handleSelectElement]
   );
 
   const remainingPages = React.useMemo(() => {

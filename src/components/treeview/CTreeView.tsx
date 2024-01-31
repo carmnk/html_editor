@@ -2,9 +2,10 @@
 
 import * as React from "react";
 import { TreeView } from "@mui/x-tree-view/TreeView";
-import { mdiChevronDown, mdiChevronRight } from "@mdi/js";
 import Icon from "@mdi/react";
 import { StyledTreeItem, StyledTreeItemProps } from "./CTreeItem";
+import { DndContext, DragOverlay } from "@dnd-kit/core";
+import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 
 declare module "react" {
   interface CSSProperties {
@@ -22,23 +23,35 @@ const treeViewProps = {
 const recursiveMap = (
   items: StyledTreeItemProps[],
   events: {
-    onAddChild?: (id: string) => void;
-    onDelete?: (id: string) => void;
+    additionalActions?:
+      | AdditionalActionType[]
+      | ((item: any) => AdditionalActionType[]);
+    actions?: AdditionalActionType[] | ((item: any) => AdditionalActionType[]);
   },
-  disableBorderLeft?: boolean
+  disableBorderLeft?: boolean,
+  toggleExpand?: (id: string) => void
 ): JSX.Element[] => {
   return (
     items?.map?.(({ icon, ...item }) => {
+      const additionalActions =
+        typeof events?.additionalActions === "function"
+          ? events?.additionalActions(item)
+          : events?.additionalActions;
+      const actions =
+        typeof events?.actions === "function"
+          ? events?.actions(item)
+          : events?.actions;
       const children = (item?.children ?? []) as StyledTreeItemProps[];
       return (
         <StyledTreeItem
           {...item}
           icon={typeof icon === "string" ? <Icon path={icon} size={1} /> : icon}
-          onAddChild={events?.onAddChild}
-          onDelete={events?.onDelete}
           disableBorderLeft={disableBorderLeft}
+          additionalActions={additionalActions}
+          actions={actions}
+          toggleExpand={toggleExpand}
         >
-          {recursiveMap(children, events) as any}
+          {recursiveMap(children, events, undefined, toggleExpand) as any}
         </StyledTreeItem>
       );
     }) ?? null
@@ -46,74 +59,210 @@ const recursiveMap = (
 };
 
 export type AdditionalActionType = {
-  action: (item: any, idFieldName: string) => void;
+  action: (nodeId: string | number, e: any) => void;
   icon: string;
   tooltip: string;
+  label: string;
+  disabled?: boolean;
 };
+
+export type AdditionalActionGenType =
+  | AdditionalActionType[]
+  | ((item: any) => AdditionalActionType[]);
 
 export type CTreeViewProps = {
   items: StyledTreeItemProps[];
-  //   idFieldName: string;
-  //   parentIdFieldName: string;
-  //   labelFieldName: string;
-  //   additionalActions?: AdditionalActionType[];
-  //   filter?: FilterType;
-  //   onEdit: (id: number, item: any, idFieldName: string) => void;
-  onDelete?: (id: string) => void;
-  onAddChild?: (id: string) => void;
-  onToggleExpand?: (id: string) => void;
-  //   onFilterChange?: (filter: FilterType) => void;
+  actions?: AdditionalActionGenType;
+  additionalActions?: AdditionalActionGenType;
+  onToggleExpand?: (id: string, e: any) => void;
+  onToggleSelect?: (id: string, e: any) => void;
+  onDragDrop?: (event: any, draggedItem: any, droppedItem: any) => void; // nodeId is the id of the dropped item
+  onDragging?: (event: any, active: boolean, draggedItem: any) => void;
   expandedItems?: string[];
   selectedItems?: string[];
   maxWidth?: number;
+  disableItemsFocusable?: boolean;
+  width?: number;
 };
 
 export const CTreeView = (props: CTreeViewProps) => {
   const {
     items,
     onToggleExpand,
+    onToggleSelect,
     expandedItems,
     selectedItems,
     maxWidth = 320,
+    additionalActions,
+    disableItemsFocusable,
+    actions,
+    onDragDrop,
+    onDragging,
+    width,
   } = props;
-  //   const {} = props;
 
-  //   const showToast = useToaster();
-  //   const showAlert = useAlert();
-  //   const theme = useTheme();
+  const [ui, setUi] = React.useState<{
+    dragging: { ctrKeyDown: boolean; active: boolean };
+  }>({
+    dragging: { ctrKeyDown: false, active: false },
+  });
+  const [overlay, setOverlay] = React.useState<any>(null);
 
-  // const [ui, setUi] = React.useState({
-  //   expandedItems: [] as string[],
-  // });
+  const handleDragStart = React.useCallback((event: any) => {
+    const treeItemProps = event?.active?.data?.current;
+    console.log("Drag started!", event, treeItemProps);
+    setOverlay(treeItemProps);
+    setUi((current) => ({
+      ...current,
+      dragging: { ...current?.dragging, active: true },
+    }));
+  }, []);
+  const handleDragEnd = React.useCallback(
+    (event: any) => {
+      const overItem = event?.over?.data?.current;
+      const overNodeId = overItem?.nodeId;
+      // console.log("Drag ended!", event, overItem, overNodeId)
+      if (!overItem || !overlay) return;
+
+      // console.log("DRAG sth", sensors);
+      onDragDrop?.(event, overlay, overItem);
+      setOverlay(null);
+      setUi((current) => ({
+        ...current,
+        dragging: { ctrKeyDown: false, active: false },
+      }));
+      onDragging?.(event, false, overlay);
+      lastMouseMoveEvent.current = null;
+    },
+    [onDragDrop, overlay, onDragging]
+  );
+
+  const lastMouseMoveEvent = React.useRef<any>(null);
+  React.useEffect(() => {
+    const mouseMoveListener = (e: any) => {
+      lastMouseMoveEvent.current = e;
+      const isCtrlPressed = e?.ctrlKey;
+      onDragging?.(e, true, overlay);
+      setUi((current) =>
+        isCtrlPressed !== current?.dragging?.ctrKeyDown
+          ? {
+              ...current,
+              dragging: { ...current.dragging, ctrKeyDown: isCtrlPressed },
+            }
+          : current
+      );
+    };
+    const keyDownListener = (e: any) => {
+      const ctrlKey = e?.ctrlKey;
+      const newEvent = { ...(lastMouseMoveEvent.current ?? {}), ctrlKey };
+      onDragging?.(newEvent, true, overlay); // event handler is not addded if dragging is not active
+      setUi((current) =>
+        ctrlKey !== current?.dragging?.ctrKeyDown
+          ? {
+              ...current,
+              dragging: { ...current.dragging, ctrKeyDown: ctrlKey },
+            }
+          : current
+      );
+    };
+    const keyUpListener = (e: any) => {
+      const ctrlKey = e?.ctrlKey;
+      const newEvent = {
+        ...(lastMouseMoveEvent.current ?? {}),
+        ctrlKey: false,
+      };
+      onDragging?.(newEvent, true, overlay); // event handler is not addded if dragging is not active
+      setUi((current) =>
+        ctrlKey !== current?.dragging?.ctrKeyDown
+          ? {
+              ...current,
+              dragging: { ...current.dragging, ctrKeyDown: false },
+            }
+          : current
+      );
+    };
+
+    if (ui?.dragging?.active) {
+      document.addEventListener("keydown", keyDownListener);
+      document.addEventListener("keyup", keyUpListener);
+      document.addEventListener("mousemove", mouseMoveListener);
+    }
+    return () => {
+      if (ui?.dragging?.active) {
+        document.addEventListener("keydown", keyDownListener);
+        document.addEventListener("keyup", keyUpListener);
+        document.removeEventListener("mousemove", mouseMoveListener);
+      }
+    };
+  }, [onDragging, overlay, ui?.dragging?.active]);
+
+  const handleExpandNode = React.useCallback(
+    (id: string) => {
+      console.log("HANDELE EXPAND", id);
+      if (!onToggleExpand) return;
+      onToggleExpand(id, null);
+    },
+    [onToggleExpand]
+  );
 
   return (
     <>
-      <TreeView
-        aria-label="tree-view"
-        expanded={expandedItems as any}
-        onNodeSelect={(e, value) => {
-          if (!onToggleExpand) return;
-
-          onToggleExpand(value);
-        }}
-        selected={selectedItems?.[0]}
-        // multiSelect={true}
-        defaultCollapseIcon={<Icon path={mdiChevronDown} size={1} />}
-        defaultExpandIcon={<Icon path={mdiChevronRight} size={1} />}
-        defaultEndIcon={<div style={{ width: 24 }} />}
-        sx={{ overflowY: "auto", maxWidth: maxWidth, ...treeViewProps }}
+      <DndContext
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        // sensors={sensors}
       >
-        {items?.map?.((item) =>
-          recursiveMap(
-            [item],
-            {
-              onAddChild: props?.onAddChild,
-              onDelete: props?.onDelete,
-            },
-            true
-          )
-        )}
-      </TreeView>
+        <TreeView
+          disabledItemsFocusable={disableItemsFocusable}
+          aria-label="tree-view"
+          expanded={expandedItems as any}
+          onNodeSelect={(e, value) => {
+            if (!onToggleSelect) return;
+            onToggleSelect?.(value, e);
+          }}
+          // onNodeToggle={(e, value) => {
+          //   e.stopPropagation();
+          //   if (!onToggleExpand) return;
+          //   // if ((e?.target as any)?.nodeName !== "svg") return;
+
+          //   const newToggles = [
+          //     ...(value.filter((v) => !expandedItems?.includes?.(v)) ?? []),
+          //     ...(expandedItems?.filter((item) => !value?.includes?.(item)) ??
+          //       []),
+          //   ];
+          //   forEach(newToggles, (t) => {
+          //     onToggleExpand(t, e);
+          //   });
+          // }}
+          selected={selectedItems?.[0]}
+          // multiSelect={true}
+          // defaultCollapseIcon={<Icon path={mdiChevronDown} size={1} />}
+          // defaultExpandIcon={<Icon path={mdiChevronRight} size={1} />}
+          // defaultEndIcon={<div style={{ width: 24 }} />}
+          sx={{
+            overflowY: "auto",
+            maxWidth: maxWidth,
+            width,
+            ...(treeViewProps as any),
+          }}
+        >
+          {items?.map?.((item) =>
+            recursiveMap(
+              [item],
+              {
+                additionalActions: additionalActions,
+                actions,
+              },
+              true,
+              handleExpandNode
+            )
+          )}
+        </TreeView>
+
+        <DragOverlay modifiers={[restrictToVerticalAxis]}>
+          {overlay && <StyledTreeItem {...overlay} />}
+        </DragOverlay>
+      </DndContext>
     </>
   );
 };

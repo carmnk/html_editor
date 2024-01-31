@@ -28,7 +28,7 @@ export const useServerController = (editorState: EditorStateType) => {
         selectedPage,
         expandedTreeItems,
         imageWorkspaces,
-        htmlPages: htmlPagesIn,
+        htmlPages: htmlPagesIn, // !!! ???
         cssWorkspaces,
         ui,
         ...dataRaw

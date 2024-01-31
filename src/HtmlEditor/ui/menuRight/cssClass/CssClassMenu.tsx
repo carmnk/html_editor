@@ -1,6 +1,6 @@
 import { Stack, useTheme, Chip, Tooltip } from "@mui/material";
 import { ClassRulesTab } from "./ClassRulesTab";
-import { EditorControllerType } from "../../../editorController";
+import { EditorControllerType } from "../../../editorController/editorController";
 import { ClickTextField } from "../../../../components/inputs/ClickTextField";
 
 export type CssClassMenuProps = {
@@ -69,7 +69,7 @@ export const CssClassMenu = (props: CssClassMenuProps) => {
       {/* <CTabs
         value={ui?.selectedTab}
         onChange={handleChangeTab}
-        tabs={menuTabs}
+        items={menuTabs}
       /> */}
       <ClassRulesTab editorController={editorController} />
     </>

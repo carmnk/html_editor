@@ -1,17 +1,6 @@
 import { CSSProperties, useCallback, Dispatch, SetStateAction } from "react";
-import { EditorStateType, HtmlEditorElementType } from "./EditorState";
-
-export type EditorControllerHtmlElementActionsType = {
-  removeRule: (ruleName: string) => void;
-  addNewRule: () => void;
-  toggleEditRule: (ruleName: keyof CSSProperties) => void;
-  handleChangeEditRuleValue: (newValue: string) => void;
-  handleChangeClassName: (newClassName: string) => void;
-  handleChangeAddClassRuleName: (newValue: string) => void;
-  handleChangeAddClassRuleValue: (newValue: string) => void;
-  handleDeleteCssSelector: (name: string) => void;
-  handleAddCssSelector: (newVal: string) => void;
-};
+import { EditorStateType } from "../EditorState";
+import { EditorControllerCssSelectorActionsType } from "./editorControllerTypes";
 
 export type EditorControllerHtmlElementActionsParams = {
   editorState: EditorStateType;
@@ -20,7 +9,7 @@ export type EditorControllerHtmlElementActionsParams = {
 
 export const useEditorControllerCssSelectorActions = (
   params: EditorControllerHtmlElementActionsParams
-): EditorControllerHtmlElementActionsType => {
+): EditorControllerCssSelectorActionsType => {
   const { editorState, setEditorState } = params;
 
   const getSelectedCssClass = useCallback(
@@ -201,7 +190,7 @@ export const useEditorControllerCssSelectorActions = (
   );
 
   const handleAddCssSelector = useCallback(
-    (newVal: string) => {
+    (newVal: string | number) => {
       const wspace = newVal;
       setEditorState((current) => ({
         ...current,

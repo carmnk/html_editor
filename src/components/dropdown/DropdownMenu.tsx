@@ -12,8 +12,19 @@ export const DropdownMenu = (
 ) => {
   const { children, anchorEl, onClose, open } = props;
 
+  const stopPropagation = React.useCallback(
+    (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+      onClose?.();
+      e.stopPropagation();
+    },
+    [onClose]
+  );
   return (
     <Menu
+      disablePortal={false}
+      // onPointerDown={stopPropagation}
+      // onKeyDown={stopPropagation}
+
       open={!!open}
       anchorEl={anchorEl || undefined}
       onClose={onClose}

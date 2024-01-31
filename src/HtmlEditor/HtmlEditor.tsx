@@ -1,11 +1,10 @@
 import { AppBar, Box, Stack, ThemeProvider, useTheme } from "@mui/material";
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "../components/buttons/Button.tsx";
 import {
   mdiAlphaC,
   mdiContentSave,
   mdiFileUpload,
-  mdiHelp,
   mdiPackageDown,
   mdiThemeLightDark,
 } from "@mdi/js";
@@ -13,15 +12,22 @@ import { LeftMenu } from "./ui/LeftNavigationMenu/LeftMenu.tsx";
 import { HtmlEditorElementType } from "./EditorState.tsx";
 import { renderHtmlElements } from "./renderElements.tsx";
 import { CBackdrop } from "../components/CBackdrop.tsx";
-import { useEditorController } from "./editorController.tsx";
+import { useEditorController } from "./editorController/editorController.tsx";
 import { useServerController } from "./apiController.ts";
+import { getFlatHtmlElements } from "./utils.ts";
+import { importIconByName } from "./defs/icons.ts";
+import { DropdownMenu } from "../components/dropdown/DropdownMenu.tsx";
+import { DropdownMenuItem } from "../components/dropdown/DropdownMenuItem.tsx";
+// import { DndContext } from "@dnd-kit/core";
 
 export const HtmlEditor = () => {
   const theme = useTheme();
   const editorController = useEditorController();
   const { editorState, selectedPageHtmlElements, actions } = editorController;
   const { toggleEditorTheme } = actions.ui;
+  const handleSelectHtmlElement = actions.ui.handleSelectHtmlElement;
   const { saveProject, handleLoadProject } = actions.project;
+  const toggleThemeButtonRef = useRef<HTMLButtonElement>(null);
 
   const { handleRequestWebsiteZipBundle, data } =
     useServerController(editorState);
@@ -31,9 +37,10 @@ export const HtmlEditor = () => {
 
   const handleSelectElement = useCallback(
     (element: HtmlEditorElementType, isHovering: boolean) => {
-      console.log("handleSelectElement", element, isHovering);
+      if (!element?.id) return;
+      handleSelectHtmlElement(element.id);
     },
-    []
+    [handleSelectHtmlElement]
   );
 
   const handleRequestLoadFile = useCallback(() => {
@@ -50,6 +57,39 @@ export const HtmlEditor = () => {
     ),
     []
   );
+
+  const [ui, setUi] = useState({ openThemeMenu: false });
+
+  const [icons, setIcons] = useState<{ [key: string]: string }>({});
+
+  const handleToggleOpenThemeMenu = useCallback(() => {
+    setUi((current) => ({ ...current, openThemeMenu: !current.openThemeMenu }));
+  }, []);
+
+  useEffect(() => {
+    const updateIcons = async () => {
+      const flatElements = editorController.selectedPageHtmlElements
+        ? getFlatHtmlElements(editorController.selectedPageHtmlElements)
+        : [];
+      const iconsNames = flatElements
+        .map((el: any) => el?.props?.icon)
+        .filter((el) => el && !Object.keys(icons).includes(el));
+      if (!iconsNames.length) return;
+      const iconsNew: any = {};
+      for (const iconName of iconsNames) {
+        if (!icons[iconName]) {
+          iconsNew[iconName] = await importIconByName(iconName);
+        }
+      }
+      setIcons((current) => ({ ...current, ...iconsNew }));
+    };
+    updateIcons();
+  }, [editorController.selectedPageHtmlElements, icons]);
+
+  // const handleToggleEditorTheme = useCallback(() => {
+  //   toggleEditorTheme((current) => (current === "light" ? "dark" : "light"));
+  // }, [toggleEditorTheme]);
+
   return (
     <Box
       position="fixed"
@@ -94,8 +134,9 @@ export const HtmlEditor = () => {
                 iconButton={true}
                 icon={mdiThemeLightDark}
                 type="text"
-                onClick={toggleEditorTheme}
+                onClick={handleToggleOpenThemeMenu}
                 tooltip="Toggle Website Theme"
+                ref={toggleThemeButtonRef}
               />
               <Button
                 iconButton={true}
@@ -135,8 +176,10 @@ export const HtmlEditor = () => {
             >
               {renderHtmlElements(
                 selectedPageHtmlElements,
-                editorState,
-                handleSelectElement
+                editorController,
+                handleSelectElement,
+                undefined,
+                icons
               )}
             </Box>
           </ThemeProvider>
@@ -149,6 +192,27 @@ export const HtmlEditor = () => {
         ref={loadFileInputRef}
         onChange={handleLoadProject}
       />
+      <DropdownMenu
+        anchorEl={toggleThemeButtonRef.current}
+        open={ui?.openThemeMenu}
+        onClose={handleToggleOpenThemeMenu}
+      >
+        {editorState?.themes?.map((theme, tIdx) => (
+          <DropdownMenuItem
+            key={theme.name ?? tIdx}
+            id={theme.name ?? tIdx}
+            label={theme.name}
+            disabled={editorState?.theme?.name === theme.name}
+            // icon={action.icon}
+            onClick={(e: any) => {
+              e.stopPropagation();
+              toggleEditorTheme(theme.name);
+              handleToggleOpenThemeMenu();
+            }}
+            // disabled={action.disabled}
+          ></DropdownMenuItem>
+        ))}
+      </DropdownMenu>
       {loading && <CBackdrop open={true} label={waitInfo} />}
     </Box>
   );

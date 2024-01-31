@@ -1,7 +1,7 @@
 import { Stack, Typography, Box, useTheme } from "@mui/material";
 import { ChangeEvent, useCallback } from "react";
 import { TextArea } from "../../../../components/inputs/TextArea";
-import { EditorControllerType } from "../../../editorController";
+import { EditorControllerType } from "../../../editorController/editorController";
 
 export type RightMenuContentTabProps = {
   editorController: EditorControllerType;
@@ -10,7 +10,7 @@ export type RightMenuContentTabProps = {
 export const RightMenuContentTab = (props: RightMenuContentTabProps) => {
   const { editorController } = props;
   const { actions, selectedHtmlElement } = editorController;
-  const { content } = selectedHtmlElement ?? {};
+  const { content } = (selectedHtmlElement as any) ?? {};
   const { changeCurrentHtmlElementProp } = actions.htmlElement;
 
   const theme = useTheme();

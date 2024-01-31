@@ -10,15 +10,19 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist --repo https://github.com/carmnk/html_editor.git"
+    "deploy": "gh-pages -d dist --repo https://github.com/carmnk/html_editor.git",
+    "gen": "ts-node ./toJson.js"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.1.0",
+    "@dnd-kit/modifiers": "^7.0.0",
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
     "@fontsource/roboto": "^5.0.8",
     "@mdi/js": "^7.3.67",
     "@mdi/react": "^1.6.1",
     "@mui/material": "^5.15.1",
+    "@mui/x-date-pickers": "^5.0.6",
     "@mui/x-tree-view": "^6.17.0",
     "axios": "^1.6.2",
     "lodash": "^4.17.21",
@@ -29,10 +33,14 @@
     "react-dropzone": "^14.2.3",
     "react-router-dom": "^6.21.1",
     "swiper": "^11.0.5",
+    "ts-json-schema-generator": "^1.5.0",
+    "typescript-json-schema": "^0.62.0",
     "uuid": "^9.0.1"
   },
   "devDependencies": {
+    "@types/lodash": "^4.14.202",
     "@types/react": "^18.2.43",
+    "@types/react-color": "^3.0.11",
     "@types/react-dom": "^18.2.17",
     "@types/uuid": "^9.0.7",
     "@typescript-eslint/eslint-plugin": "^6.14.0",
@@ -43,8 +51,6 @@
     "eslint-plugin-react-refresh": "^0.4.5",
     "gh-pages": "^6.1.1",
     "typescript": "^5.2.2",
-    "vite": "^5.0.8",
-    "@types/lodash": "^4.14.202",
-    "@types/react-color": "^3.0.11"
+    "vite": "^5.0.8"
   }
 }

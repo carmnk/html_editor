@@ -2,7 +2,7 @@ import { Box, Stack, TextField } from "@mui/material";
 import { sizePreSelectButtons } from "../../defs/_defCssPropertyButtonGroups";
 import { ButtonGroup } from "../../../../components/buttons/ButtonGroupButton";
 import { CSSProperties, useCallback, useState } from "react";
-import { EditorControllerType } from "../../../editorController";
+import { EditorControllerType } from "../../../editorController/editorController";
 
 export type CssSizeSelectorProps = {
   editorController: EditorControllerType;

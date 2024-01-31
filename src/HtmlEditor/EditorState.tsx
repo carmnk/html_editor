@@ -1,20 +1,72 @@
 import { CSSProperties, HTMLProps } from "react";
 import { baseHtmlDocument } from "./defs/baseHtmlElements";
-import { muiLightSiteTheme } from "../theme/muiTheme";
-import { Theme } from "@mui/material";
+import {
+  ExtendedTheme,
+  muiDarkSiteTheme,
+  muiLightSiteTheme,
+} from "../theme/muiTheme";
 import { cloneDeep } from "lodash";
-// import { HtmlEditorElementType } from "./HtmlEditorElement";
+
+export enum HtmlEditorComponentElementTypes {
+  Button = "Button",
+  Chip = "Chip",
+  Typography = "Typography",
+  Tabs = "Tabs",
+  NavContainer = "NavContainer",
+  ListNavigation = "ListNavigation",
+  BottomNavigation = "BottomNavigation",
+}
+type ComponentKeyType = `${HtmlEditorComponentElementTypes}`;
+
+export type HtmlEditorElementKeyType =
+  | keyof HTMLElementTagNameMap
+  | ComponentKeyType;
+
+type ComponentChildrenType = HtmlEditorElementType<HtmlEditorElementKeyType>;
 
 export type HtmlEditorElementType<
-  T extends keyof HTMLElementTagNameMap = keyof HTMLElementTagNameMap
+  T extends HtmlEditorElementKeyType = HtmlEditorElementKeyType
+> = T extends keyof HTMLElementTagNameMap
+  ? {
+      id: string; // -> should be:  _id (internal)
+      type: T;
+      attributes?: HTMLProps<HTMLElementTagNameMap[T]>;
+      children?: HtmlEditorElementType<keyof HTMLElementTagNameMap>[];
+      content?: string;
+      imageSrcId?: string;
+      _disableDelete?: boolean;
+    }
+  : {
+      id: string; // -> should be:  _id (internal)
+      userID: string;
+      type: T;
+      // attributes?: HTMLProps<HTMLElementTagNameMap[T]>;
+      children?: ComponentChildrenType[];
+      props?: { [key: string]: any };
+    };
+
+export type NEW_GenericHtmlEditorElementType<
+  T extends HtmlEditorElementKeyType = keyof HTMLElementTagNameMap
 > = {
-  id?: string;
-  type: T;
-  attributes?: HTMLProps<HTMLElementTagNameMap[T]>;
-  children?: HtmlEditorElementType<keyof HTMLElementTagNameMap>[];
-  content?: string;
-  imageSrcId?: string;
+  _id: string; // -> _
+  _userID: string | null; // -> instead of attributes.id !!! (comp: -> _)
+  _parentId: string | null; // -> _ was children before !!!
+  _content?: string; // -> _
+  _imageSrcId?: string; // -> _
+  _type: T; //  -> _
+  _disableDelete?: boolean;
+  _page: string;
 };
+
+export type NEW_HtmlEditorElementType<
+  T extends HtmlEditorElementKeyType = keyof HTMLElementTagNameMap
+> = T extends keyof HTMLElementTagNameMap
+  ? NEW_GenericHtmlEditorElementType<T> & {
+      attributes?: HTMLProps<HTMLElementTagNameMap[T]>; // subtable
+    }
+  : NEW_GenericHtmlEditorElementType<T> & {
+      props?: { [key: string]: any };
+    };
 
 export enum EditorStateLeftMenuTabs {
   PROJECT = "project",
@@ -23,19 +75,31 @@ export enum EditorStateLeftMenuTabs {
   ASSETS = "assets",
   Image = "image",
   Localization = "localization",
+  Theme = "theme",
+  Font = "font",
+  State = "state",
 }
+
+type DeepPartial<T> = T extends object
+  ? {
+      [P in keyof T]?: DeepPartial<T[P]>;
+    }
+  : T;
 
 export type CssWorkspaceType = {
   [classes: string]: CSSProperties;
 };
 
 export type EditorStateType = {
+  elements: NEW_HtmlEditorElementType[];
+
   htmlPages: { [key: string]: HtmlEditorElementType[] };
   // htmlElements: HtmlEditorElementType[];
   selectedHtmlElementName: string | null;
   expandedTreeItems: string[];
   // selectedItem: HtmlEditorElementType | null;
-  theme: Theme;
+  theme: ExtendedTheme;
+  themes: ExtendedTheme[];
   selectedCssClass: string | null;
   selectedImage: string | null;
   selectedPage: string;
@@ -59,6 +123,8 @@ export type EditorStateType = {
       };
     };
   };
+  fonts: string[];
+
   ui: {
     detailsMenu: {
       ruleName: string;
@@ -75,6 +141,8 @@ export type EditorStateType = {
     };
     navigationMenu: {
       activeTab: EditorStateLeftMenuTabs;
+      elementAddComponentMode: string | null;
+      selectedTheme: string | null;
     };
   };
   // selected?: {
@@ -88,6 +156,14 @@ export type EditorStateType = {
 export const defaultEditorState = (): EditorStateType => {
   const defaultHtmlPageElements = cloneDeep(baseHtmlDocument);
   return {
+    elements:
+      defaultHtmlPageElements?.map((el) => ({
+        _id: el.id,
+        _parentId: null,
+        _userID: null,
+        _type: el.type as any,
+        _page: "index",
+      })) ?? [],
     htmlPages: {
       index: defaultHtmlPageElements,
     },
@@ -107,6 +183,7 @@ export const defaultEditorState = (): EditorStateType => {
     expandedTreeItems: [],
     // selectedItem: null, // -> included in htmlPages
     theme: muiLightSiteTheme,
+    themes: [muiLightSiteTheme, muiDarkSiteTheme] as any,
     selectedPage: "index",
     selectedImage: null,
     ui: {
@@ -125,7 +202,17 @@ export const defaultEditorState = (): EditorStateType => {
       },
       navigationMenu: {
         activeTab: EditorStateLeftMenuTabs.PAGE,
+        elementAddComponentMode: null,
+        selectedTheme: null,
       },
     },
+    fonts: [
+      "Arial",
+      "Arial Black",
+      "Tahoma",
+      "Times New Roman",
+      "Verdana",
+      "'Roboto'",
+    ],
   };
 };

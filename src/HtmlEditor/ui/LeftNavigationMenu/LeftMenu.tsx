@@ -1,11 +1,14 @@
-import { Divider, Stack, useTheme } from "@mui/material";
+import { Box, Divider, Stack, useTheme } from "@mui/material";
 import React, { PropsWithChildren } from "react";
 import { Button } from "../../../components/buttons/Button.tsx";
 import {
   mdiFile,
   mdiFolderOutline,
+  mdiFormatText,
   mdiImage,
   mdiReact,
+  mdiSpeedometer,
+  mdiThemeLightDark,
   mdiTranslate,
 } from "@mdi/js";
 import { RightMenu } from "../menuRight/RightMenu.tsx";
@@ -15,7 +18,10 @@ import { ProjectTab } from "./ProjectTab.tsx";
 import { CssTab } from "./CssTab.tsx";
 import { AssetsTab } from "./AssetsTab.tsx";
 import { CssFileIcon } from "../../../components/icons/CssFileIcon.tsx";
-import { EditorControllerType } from "../../editorController.tsx";
+import { EditorControllerType } from "../../editorController/editorController.tsx";
+import { ThemesTab } from "./ThemesTab.tsx";
+import { FontsTab } from "./FontsTab.tsx";
+import { StateTab } from "./StateTab.tsx";
 
 export type LeftMainMenuProps = PropsWithChildren<{
   editorController: EditorControllerType;
@@ -31,9 +37,6 @@ export const LeftMenu = (props: LeftMainMenuProps) => {
     return Object.keys(EditorStateLeftMenuTabs).reduce(
       (acc: { [key: string]: () => void }, key: string) => {
         acc[key] = () => {
-          console.log(
-            EditorStateLeftMenuTabs[key as keyof typeof EditorStateLeftMenuTabs]
-          );
           handleSwitchNavigationTab(
             EditorStateLeftMenuTabs[key as keyof typeof EditorStateLeftMenuTabs]
           );
@@ -70,14 +73,6 @@ export const LeftMenu = (props: LeftMainMenuProps) => {
             type={activeNavigationTab === "page" ? undefined : "text"}
             onClick={handleSwitchTab.PAGE}
           />
-
-          <Button
-            tooltip="CSS"
-            iconButton={true}
-            icon={<CssFileIcon />}
-            type={activeNavigationTab === "css" ? undefined : "text"}
-            onClick={handleSwitchTab.CSS}
-          />
           <Button
             tooltip="Components"
             disabled={true}
@@ -87,6 +82,21 @@ export const LeftMenu = (props: LeftMainMenuProps) => {
             // onClick={handleSwitchTab.CSS}
           />
           <Divider />
+          <Button
+            tooltip="Themes"
+            iconButton={true}
+            icon={mdiThemeLightDark}
+            type={activeNavigationTab === "theme" ? undefined : "text"}
+            onClick={handleSwitchTab.Theme}
+          />
+          <Divider />
+          <Button
+            tooltip="CSS"
+            iconButton={true}
+            icon={<CssFileIcon />}
+            type={activeNavigationTab === "css" ? undefined : "text"}
+            onClick={handleSwitchTab.CSS}
+          />
           <Button
             tooltip="Images"
             iconButton={true}
@@ -102,16 +112,32 @@ export const LeftMenu = (props: LeftMainMenuProps) => {
             type={activeNavigationTab === "localization" ? undefined : "text"}
             // onClick={handleSwitchTab.CSS}
           />
+          <Button
+            tooltip="Fonts"
+            // disabled={true}
+            iconButton={true}
+            icon={mdiFormatText}
+            type={activeNavigationTab === "font" ? undefined : "text"}
+            onClick={handleSwitchTab.Font}
+          />
+          <Button
+            tooltip="State"
+            // disabled={true}
+            iconButton={true}
+            icon={mdiSpeedometer}
+            type={activeNavigationTab === "state" ? undefined : "text"}
+            onClick={handleSwitchTab.State}
+          />{" "}
         </Stack>
-
-        {/* SubMenu */}
-        <Stack
+        <Box borderLeft={"1px solid " + theme.palette.divider} width={320}>
+          {/* SubMenu */}
+          {/* <Stack
           gap={2}
-          borderLeft={"1px solid " + theme.palette.divider}
+          // borderLeft={"1px solid " + theme.palette.divider}
           height="100%"
           pr={2}
           minWidth={220}
-        >
+        > */}
           {activeNavigationTab === "page" ? (
             <PageTab editorController={editorController} />
           ) : activeNavigationTab === "project" ? (
@@ -120,9 +146,17 @@ export const LeftMenu = (props: LeftMainMenuProps) => {
             <CssTab editorController={editorController} />
           ) : activeNavigationTab === "assets" ? (
             <AssetsTab editorController={editorController} />
+          ) : activeNavigationTab === "theme" ? (
+            <ThemesTab editorController={editorController} />
+          ) : activeNavigationTab === "font" ? (
+            <FontsTab editorController={editorController} />
+          ) : activeNavigationTab === "state" ? (
+            <StateTab editorController={editorController} />
           ) : null}
-        </Stack>
+        </Box>
       </Stack>
+
+      {/* </Stack> */}
 
       {/* Content (edited site) */}
       {children}

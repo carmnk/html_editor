@@ -1,115 +1,28 @@
 import { cloneDeep } from "lodash";
-import {
-  CSSProperties,
-  ChangeEvent,
-  useState,
-  useCallback,
-  useMemo,
-} from "react";
-import { muiLightSiteTheme, muiDarkSiteTheme } from "../theme/muiTheme";
+import { ChangeEvent, useState, useCallback, useMemo } from "react";
 import {
   toBase64,
   createAndDownloadFileWithText,
   dataURLtoFile,
-} from "../utils/file";
+} from "../../utils/file";
 import {
   EditorStateLeftMenuTabs,
   EditorStateType,
-  HtmlEditorElementType,
   defaultEditorState,
-} from "./EditorState";
-import { findElementById, getStylesFromClasses } from "./renderElements";
-import { baseHtmlDocument } from "./defs/baseHtmlElements";
+} from "../EditorState";
+import { findElementById, getStylesFromClasses } from "../renderElements";
+import { baseHtmlDocument } from "../defs/baseHtmlElements";
 import { v4 as uuid } from "uuid";
 import {
   getInitialStyles,
   makeImageSourcesForExport,
   replaceImageSources,
-} from "./utils";
+} from "../utils";
 import { useEditorControllerHtmlElementActions } from "./editorControllerHtmlElement";
 import { useEditorControllerCssSelectorActions } from "./editorControllerCssSelector";
-
-export type EditorControllerType = {
-  editorState: EditorStateType;
-  setEditorState: React.Dispatch<React.SetStateAction<EditorStateType>>;
-  getSelectedCssClass: (className?: string) => CSSProperties;
-  getSelectedImage: (imageId?: string) => {
-    image: typeof Image;
-    fileName: string;
-    src: string;
-    imageSrcId: string;
-  } | null;
-  selectedHtmlElement: HtmlEditorElementType | null;
-  selectedPageHtmlElements: HtmlEditorElementType[];
-  selectedHtmlElementStyleAttributes: React.CSSProperties;
-  actions: {
-    project: {
-      saveProject: () => void;
-      handleLoadProject: (e: ChangeEvent<HTMLInputElement>) => void;
-      addHtmlPage: () => void;
-      removeHtmlPage: (pageName: string) => void;
-    };
-    htmlElement: {
-      handleDeleteHtmlElement: (newValue: string) => void;
-      handleAddHtmlChild: (newValue: string) => void;
-      handleToggleHtmlElementEditCssRule: (attributeName: string) => void;
-      changeHtmlElementEditedCssRuleValue: (
-        newValue: string,
-        activeEditRule: string
-      ) => void;
-      changeCurrentHtmlElement: (
-        newHtmlElement:
-          | HtmlEditorElementType
-          | ((current: HtmlEditorElementType) => HtmlEditorElementType)
-      ) => void;
-      changeCurrentHtmlElementStyleAttribute: (
-        ruleName: string,
-        ruleValue: string
-      ) => void;
-      changeCurrentHtmlElementAttribute: (
-        attributeName: string,
-        attributeValue: string
-      ) => void;
-      changeCurrentHtmlElementProp: (
-        propName: "id" | "type" | "content" | "imageSrcId",
-        propValue: string
-      ) => void;
-      handleRemoveCurrentHtmlElementStyleAttribute: (ruleName: string) => void;
-    };
-    cssSelector: {
-      removeRule: (ruleName: string) => void;
-      addNewRule: () => void;
-      toggleEditRule: (ruleName: keyof CSSProperties) => void;
-      handleChangeEditRuleValue: (newValue: string) => void;
-      handleChangeClassName: (newClassName: string) => void;
-      handleChangeAddClassRuleName: (newValue: string) => void;
-      handleChangeAddClassRuleValue: (newValue: string) => void;
-      handleDeleteCssSelector: (name: string) => void;
-      handleAddCssSelector: (newVal: string) => void;
-    };
-    assets: {
-      handleProvidedImageFile: (files: File[]) => void;
-      handleDeleteImageFile: (imageId: string) => void;
-      handleChangeImageFilename: (newFileName: string) => void;
-    };
-    ui: {
-      toggleEditorTheme: () => void;
-      handleSelectHtmlPage: (newValue: string) => void;
-      handleSelectHtmlElement: (newValue: string) => void;
-      handleSelectCssClass: (newValue: string) => void;
-      handleSelectImage: (newValue: string) => void;
-      navigationMenu: {
-        handleSwitchNavigationTab: (newValue: string) => void;
-      };
-      detailsMenu: {
-        handleSelectHtmlElementCssPropertiesListFilter: (
-          newValue: string
-        ) => void;
-        handleChangeHtmlElementStyleTab: (newValue: string) => void;
-      };
-    };
-  };
-};
+import { Theme, createTheme } from "@mui/material";
+import { useEditorControllerAppState } from "./editorControllerAppState";
+import { EditorControllerType } from "./editorControllerTypes";
 
 export const useEditorController = (): EditorControllerType => {
   const [editorState, setEditorState] = useState(defaultEditorState());
@@ -144,8 +57,11 @@ export const useEditorController = (): EditorControllerType => {
     };
   }, [selectedHtmlElement, editorState.cssWorkspaces]);
 
+  const appState = useEditorControllerAppState({ editorState, setEditorState });
+
   const htmlElementActions = useEditorControllerHtmlElementActions({
     editorState,
+    appState,
     setEditorState,
     selectedHtmlElement,
     selectedHtmlElementStyleAttributes,
@@ -175,15 +91,21 @@ export const useEditorController = (): EditorControllerType => {
     [editorState?.imageWorkspaces, editorState?.selectedImage]
   );
 
-  const toggleEditorTheme = useCallback(() => {
-    setEditorState((current) => ({
-      ...current,
-      theme:
-        current.theme === muiLightSiteTheme
-          ? muiDarkSiteTheme
-          : muiLightSiteTheme,
-    }));
-  }, []);
+  const toggleEditorTheme = useCallback(
+    (themeNameIn: ((currentThemeName: string) => string) | string) => {
+      const themeName =
+        typeof themeNameIn === "function"
+          ? themeNameIn(editorState?.theme?.name)
+          : themeNameIn;
+      if (!themeName) return;
+      setEditorState((current) => ({
+        ...current,
+        theme:
+          current.themes?.find?.((t) => t.name === themeName) ?? current?.theme,
+      }));
+    },
+    [editorState?.theme?.name]
+  );
 
   const saveProject = useCallback(async () => {
     const { cssWorkspaces, imageWorkspaces } = editorState;
@@ -373,16 +295,75 @@ export const useEditorController = (): EditorControllerType => {
     (newValue: string) => {
       setEditorState((current) => ({
         ...current,
+        // ui: {
+        //   ...current.ui,
+        //   navigationMenu: {
+        //     ...current.ui.navigationMenu,
+        //     activeTab: EditorStateLeftMenuTabs.PAGE,
+        //   },
+        // },
+        selectedPage: newValue,
+        selectedHtmlElementName: null,
+      }));
+    },
+    [setEditorState]
+  );
+
+  const handleSelectTheme = useCallback(
+    (newValue: string) => {
+      setEditorState((current) => ({
+        ...current,
         ui: {
           ...current.ui,
           navigationMenu: {
             ...current.ui.navigationMenu,
-            activeTab: EditorStateLeftMenuTabs.PAGE,
+            selectedTheme: newValue,
           },
         },
-        selectedPage: newValue,
-        selectedHtmlElementName: null,
       }));
+    },
+    [setEditorState]
+  );
+
+  const handleChangeThemePaletteColor = useCallback(
+    ({
+      themeName,
+      colorKey,
+      newValue,
+      subKey,
+    }: {
+      themeName: string;
+      colorKey: keyof Theme["palette"];
+      subKey?: string;
+      newValue: string;
+    }) => {
+      setEditorState((current) => {
+        const themeIndex = current.themes?.findIndex(
+          (t) => t.name === themeName
+        );
+        const currentTheme = current.themes?.[themeIndex ?? 0];
+        const newTheme = createTheme({
+          ...currentTheme,
+          palette: {
+            ...currentTheme?.palette,
+            [colorKey]: {
+              // ...currentTheme?.palette?.[colorKey],
+              [subKey ?? ""]: newValue,
+            },
+          },
+        });
+
+        const themes = current.themes?.map((t, i) => {
+          if (i !== themeIndex) return t;
+          return newTheme;
+        });
+
+        return {
+          ...current,
+          themes,
+          theme: newTheme,
+        } as any;
+      });
     },
     [setEditorState]
   );
@@ -470,9 +451,22 @@ export const useEditorController = (): EditorControllerType => {
 
   const handleSelectHtmlElement = useCallback(
     (value: string) => {
+      console.log("Should SELECT", value);
       setEditorState((current) => ({
         ...current,
         selectedHtmlElementName: value,
+        // expandedTreeItems: current?.expandedTreeItems?.includes(value)
+        //   ? current?.expandedTreeItems?.filter((item) => item !== value)
+        //   : [...(current?.expandedTreeItems ?? []), value],
+      }));
+    },
+    [setEditorState]
+  );
+  const handleExpandHtmlElementTreeItem = useCallback(
+    (value: string) => {
+      setEditorState((current) => ({
+        ...current,
+        // selectedHtmlElementName: value,
         expandedTreeItems: current?.expandedTreeItems?.includes(value)
           ? current?.expandedTreeItems?.filter((item) => item !== value)
           : [...(current?.expandedTreeItems ?? []), value],
@@ -481,8 +475,28 @@ export const useEditorController = (): EditorControllerType => {
     [setEditorState]
   );
 
+  const toggleElementAddComponentMode = useCallback(
+    (nodeId: string | number) => {
+      setEditorState((current) => ({
+        ...current,
+        ui: {
+          ...current.ui,
+          navigationMenu: {
+            ...current.ui.navigationMenu,
+            elementAddComponentMode: current.ui.navigationMenu
+              .elementAddComponentMode
+              ? null
+              : (nodeId as any),
+          },
+        },
+      }));
+    },
+    []
+  );
+
   return {
     editorState,
+    appState,
     setEditorState,
     getSelectedCssClass,
     getSelectedImage,
@@ -505,12 +519,16 @@ export const useEditorController = (): EditorControllerType => {
       },
       ui: {
         toggleEditorTheme,
+        handleChangeThemePaletteColor,
         handleSelectHtmlPage,
         handleSelectHtmlElement,
         handleSelectCssClass,
         handleSelectImage,
         navigationMenu: {
           handleSwitchNavigationTab,
+          toggleElementAddComponentMode: toggleElementAddComponentMode as any,
+          handleExpandHtmlElementTreeItem,
+          handleSelectTheme,
         },
         detailsMenu: {
           handleSelectHtmlElementCssPropertiesListFilter,

@@ -42,7 +42,7 @@ export type CTextFieldProps = Omit<TextFieldProps, "onChange"> & {
   onChangeCompleted?: (newValue: string | number) => void;
   maxLength?: number | string; // ??
   locked?: boolean;
-  onChange: (
+  onChange?: (
     newValue: string | number,
     e: ChangeEvent<HTMLInputElement>
   ) => void;

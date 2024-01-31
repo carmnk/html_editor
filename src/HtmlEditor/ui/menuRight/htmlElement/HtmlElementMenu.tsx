@@ -1,6 +1,6 @@
 import { Stack, Typography, Box, useTheme, Chip } from "@mui/material";
 import { CSelect } from "../../../../components/inputs/CSelect";
-import { CTabs } from "../../../../components/tabs/CTabs";
+import { CTabs } from "../../../../components/navigation/CTabs";
 import { RightMenuContentTab } from "./ContentTab";
 import { RightMenuLayoutTab } from "./LayoutTab";
 import { RightMenuShapeTab } from "./ShapeTab";
@@ -8,7 +8,7 @@ import { RightMenuTypographyTab } from "./TypographyTab";
 import React, { useEffect, useMemo } from "react";
 import { HTML_TAG_NAMES_BASIC_OPTIONS } from "../../../defs/HTMLTagNamesDict";
 import { CAutoComplete } from "../../../../components/inputs/CAutoComplete";
-import { EditorControllerType } from "../../../editorController";
+import { EditorControllerType } from "../../../editorController/editorController";
 import { RightMenuCssRuleTab } from "./CssRulesTab";
 import CTextField from "../../../../components/inputs/CTextField";
 import { makeHtmlElementMenuTabs } from "./_defHtmlElementMenuTabs";
@@ -50,7 +50,9 @@ export const HtmlElementMenu = (props: HtmlElementMenuProps) => {
     return makeHtmlElementMenuTabs({ theme, selectedHtmlElement });
   }, [theme, selectedHtmlElement]);
 
-  const trimmedClassName = selectedHtmlElement?.attributes?.className?.trim();
+  const trimmedClassName = (
+    selectedHtmlElement as any
+  )?.attributes?.className?.trim();
   const classNames: string[] | null = useMemo(
     () => (trimmedClassName ? trimmedClassName?.split?.(" ") || null : null),
     [trimmedClassName]
@@ -86,9 +88,9 @@ export const HtmlElementMenu = (props: HtmlElementMenuProps) => {
   const handleChangeElementId = React.useCallback(
     (value: string) => {
       const propName = "id";
-      changeCurrentHtmlElementProp(propName, value);
+      changeCurrentHtmlElementAttribute(propName, value);
     },
-    [changeCurrentHtmlElementProp]
+    [changeCurrentHtmlElementAttribute]
   );
 
   const handleChangeElementClasses = React.useCallback(
@@ -120,7 +122,6 @@ export const HtmlElementMenu = (props: HtmlElementMenuProps) => {
     },
     [classNames, handleChangeElementClasses]
   );
-  console.log(classNames);
 
   const handleChangeImageSource = React.useCallback(
     (newValue: string) => {
@@ -128,11 +129,15 @@ export const HtmlElementMenu = (props: HtmlElementMenuProps) => {
         getSelectedImage?.(newValue) ?? {};
       if (!("src" in selectedImage) || !imageSrcId) return;
       const src = selectedImage?.src;
-      changeCurrentHtmlElement((current) => ({
-        ...current,
-        imageSrcId,
-        attributes: { ...current.attributes, src },
-      }));
+      changeCurrentHtmlElement((current) => {
+        const currentAttributes =
+          "attributes" in current ? current.attributes : {};
+        return {
+          ...current,
+          imageSrcId,
+          attributes: { ...currentAttributes, src } as any,
+        };
+      });
     },
     [getSelectedImage, changeCurrentHtmlElement]
   );
@@ -169,7 +174,7 @@ export const HtmlElementMenu = (props: HtmlElementMenuProps) => {
         p={1}
       >
         <ClickTextField
-          value={selectedHtmlElement?.id ?? ""}
+          value={(selectedHtmlElement as any)?.attributes?.id ?? "Set ID"}
           onChange={handleChangeElementId}
         />
         {isOverheadHtmlElement ? (
@@ -242,7 +247,7 @@ export const HtmlElementMenu = (props: HtmlElementMenuProps) => {
       <CTabs
         value={activeStylesTab}
         onChange={handleChangeHtmlElementStyleTab}
-        tabs={menuTabs}
+        items={menuTabs}
       />
 
       {/* Layout */}

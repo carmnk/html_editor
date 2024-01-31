@@ -24,6 +24,7 @@ export const baseHtmlDocument: HtmlEditorElementType[] = [
   {
     id: "app_root",
     type: "div",
+    _disableDelete: true,
     children: [],
     attributes: {
       style: {

@@ -1,7 +1,7 @@
 import { Box, Stack, Typography } from "@mui/material";
 import { CTreeView } from "../../../components/treeview/CTreeView";
-import { mdiCodeBraces, mdiFileDocument, mdiPackage } from "@mdi/js";
-import { EditorControllerType } from "../../editorController";
+import { mdiCodeBraces, mdiFileDocument, mdiPackage, mdiPlus } from "@mdi/js";
+import { EditorControllerType } from "../../editorController/editorController";
 import { useEffect, useMemo } from "react";
 import { ButtonSmallIconButton } from "../../../components/buttons/ButtonSmallIconButton";
 
@@ -19,7 +19,6 @@ export const CssTab = (props: CssTabProps) => {
     const pagesTreeItems = Object.keys(editorState.cssWorkspaces).map(
       (wsKey) => {
         const ws = editorState.cssWorkspaces[wsKey];
-        console.log("CSS ", wsKey);
         return {
           key: wsKey,
           nodeId: wsKey,
@@ -40,12 +39,19 @@ export const CssTab = (props: CssTabProps) => {
     return {
       items: pagesTreeItems,
       expandedItems: ["common"],
-      onAddChild: handleAddCssSelector,
+      // onAddChild: handleAddCssSelector,
       onDelete: handleDeleteCssSelector,
-      onToggleExpand: (newValue: string) => {
+      onToggleSelect: (newValue: string) => {
         handleSelectCssClass(newValue);
       },
-      maxWidth: 220,
+      actions: [
+        {
+          action: handleAddCssSelector,
+          tooltip: "Add Css Selector",
+          icon: mdiPlus,
+          label: "Add Css Selector",
+        },
+      ],
     };
   }, [
     editorState.cssWorkspaces,
@@ -65,7 +71,7 @@ export const CssTab = (props: CssTabProps) => {
   }, []);
 
   return (
-    <>
+    <Stack gap={2} height="100%" pr={2} width={320}>
       <Box mt={0.5} ml={1}>
         <Stack
           direction="row"
@@ -88,6 +94,6 @@ export const CssTab = (props: CssTabProps) => {
       <Box ml={0.5}>
         <CTreeView {...treeViewProps} />
       </Box>
-    </>
+    </Stack>
   );
 };

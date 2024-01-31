@@ -10,7 +10,7 @@ import {
 import { StyleSpacingSelector } from "./CssSpacingSelector";
 import { ButtonGroup } from "../../../../components/buttons/ButtonGroupButton";
 import { ChangeEvent, useCallback, useMemo } from "react";
-import { EditorControllerType } from "../../../editorController";
+import { EditorControllerType } from "../../../editorController/editorController";
 import { CssSizeSelector } from "./CssSizeSelector";
 import { getSizeMode } from "../../../utils";
 import { CUSTOM_CSS_PROPERTY_BUTTON_GROUP_DEFS } from "../../defs/_defCssPropertyCustomButtonGroups";
@@ -221,7 +221,7 @@ export const RightMenuLayoutTab = (props: RightMenuLayoutTabProps) => {
               attributeName="width"
               editorController={editorController}
               defaultSizeMode={getSizeMode(
-                selectedHtmlElement?.attributes?.style?.width,
+                (selectedHtmlElement as any)?.attributes?.style?.width,
                 "auto"
               )}
             />
@@ -232,7 +232,7 @@ export const RightMenuLayoutTab = (props: RightMenuLayoutTabProps) => {
               attributeName="height"
               editorController={editorController}
               defaultSizeMode={getSizeMode(
-                selectedHtmlElement?.attributes?.style?.height,
+                (selectedHtmlElement as any)?.attributes?.style?.height,
                 "auto"
               )}
             />

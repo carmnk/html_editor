@@ -42,7 +42,7 @@ export type CAutoCompleteProps = Omit<
   disableLabel?: boolean;
   ContainerProps?: FormControlProps;
   helperText?: ReactNode;
-  name: string;
+  name?: string;
   options: { value: string; label: string }[];
   onKeyUp?: (e?: KeyboardEventHandler<HTMLInputElement>) => void;
   value: string;
@@ -108,7 +108,8 @@ export const CAutoComplete = (props: CAutoCompleteProps) => {
           ? newValue?.value
           : "";
       isChanging.current = true;
-      onChange?.(value, injectFieldNameToEvent(e, name));
+      const event = name ? injectFieldNameToEvent(e, name) : (e as any);
+      onChange?.(value, event);
     },
     [onChange, name]
   );
@@ -129,7 +130,8 @@ export const CAutoComplete = (props: CAutoCompleteProps) => {
       if (e?.key === "Enter" && !isChanging.current) {
         const option = options?.find((opt) => opt?.label === inputValue)?.value;
         const valueAdj = option ?? (freeSoloInt ? inputValue : "");
-        onChange?.(valueAdj, injectFieldNameToEvent(e, name));
+        const event = name ? injectFieldNameToEvent(e, name) : (e as any);
+        onChange?.(valueAdj, event);
       }
     },
     [inputValue, onChange, options, name, freeSoloInt]
@@ -144,7 +146,8 @@ export const CAutoComplete = (props: CAutoCompleteProps) => {
       // if (!freeSoloInt) return
       const option = options?.find((opt) => opt?.label === inputValue)?.value;
       const valueAdj = option ?? (freeSoloInt ? inputValue : "");
-      onChange?.(valueAdj, injectFieldNameToEvent(e, name));
+      const event = name ? injectFieldNameToEvent(e, name) : (e as any);
+      onChange?.(valueAdj, event);
       if (!freeSoloInt && !option) setInputValue("");
     },
     [inputValue, onChange, freeSoloInt, options, name]
@@ -242,8 +245,6 @@ export const CAutoComplete = (props: CAutoCompleteProps) => {
   const handleFocus = useCallback(() => {
     isFocussed.current = true;
   }, []);
-
-  console.log("AC  name: ", name, " - ", options);
 
   return (
     <FormControl className="flex flex-col w-full" {...ContainerProps}>

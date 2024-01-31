@@ -1,6 +1,6 @@
 import { Stack, Typography, useTheme, Box } from "@mui/material";
 import { useMemo } from "react";
-import { EditorControllerType } from "../../../editorController";
+import { EditorControllerType } from "../../../editorController/editorController";
 import { ClickTextField } from "../../../../components/inputs/ClickTextField";
 
 export type ImageMenuProps = {
@@ -62,7 +62,7 @@ export const ImageMenu = (props: ImageMenuProps) => {
       {/* <CTabs
         value={ui?.selectedTab}
         onChange={handleChangeTab}
-        tabs={menuTabs}
+        items={menuTabs}
       /> */}
     </>
   );

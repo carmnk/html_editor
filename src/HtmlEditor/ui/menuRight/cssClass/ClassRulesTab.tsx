@@ -10,7 +10,7 @@ import { CssWorkspaceType } from "../../../EditorState";
 import { mdiPlus } from "@mdi/js";
 import { Button } from "../../../../components/buttons/Button";
 import { ClickTextField } from "../../../../components/inputs/ClickTextField";
-import { EditorControllerType } from "../../../editorController";
+import { EditorControllerType } from "../../../editorController/editorController";
 
 export type RightMenuContentTabProps = {
   editorController: EditorControllerType;
@@ -63,8 +63,6 @@ export const ClassRulesTab = (props: RightMenuContentTabProps) => {
       []
     );
   }, [editorState.ui.detailsMenu.ruleName]);
-
-  console.log("OPTS", ruleValueOptions, CSS_RULE_NAMES_OPTIONS);
 
   return (
     <>

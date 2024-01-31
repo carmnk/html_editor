@@ -4,7 +4,7 @@ import { ReactNode, useMemo } from "react";
 export type CTabsProps = {
   value: string;
   onChange: (value: string) => void;
-  tabs: {
+  items: {
     value: string;
     label: ReactNode;
     tooltip?: string;
@@ -13,7 +13,7 @@ export type CTabsProps = {
 };
 
 export const CTabs = (props: CTabsProps) => {
-  const { value, onChange, tabs } = props;
+  const { value, onChange, items } = props;
   const theme = useTheme();
 
   const activeTabStyles = useMemo(
@@ -29,10 +29,10 @@ export const CTabs = (props: CTabsProps) => {
   );
 
   const handleChangeTab = useMemo(() => {
-    return tabs.map((tab) => () => {
-      onChange(tab.value);
+    return items.map((item) => () => {
+      onChange(item.value);
     });
-  }, [tabs, onChange]);
+  }, [items, onChange]);
 
   return (
     <Tabs
@@ -44,8 +44,8 @@ export const CTabs = (props: CTabsProps) => {
       }}
       value={value}
     >
-      {tabs?.map?.((tab, tIdx) => (
-        <Tooltip key={tIdx} title={tab.tooltip} placement="top" arrow>
+      {items?.map?.((item, iIdx) => (
+        <Tooltip key={iIdx} title={item.tooltip} placement="top" arrow>
           <div>
             <Tab
               sx={{
@@ -54,10 +54,10 @@ export const CTabs = (props: CTabsProps) => {
                 minHeight: 32,
                 transition: "background 300ms cubic-bezier(0.4, 0, 0.2, 1) 0ms",
                 opacity: 1,
-                ...(tab.value === value ? activeTabStyles : {}),
+                ...(item.value === value ? activeTabStyles : {}),
               }}
-              disabled={tab?.disabled}
-              value={tab.value}
+              disabled={item?.disabled}
+              value={item.value}
               label={
                 <Typography
                   component="span"
@@ -67,9 +67,9 @@ export const CTabs = (props: CTabsProps) => {
                   // color="text.primary"
                   lineHeight={"1em"}
                   p={0.5}
-                  color={tab?.disabled ? "text.disabled" : "text.primary"}
+                  color={item?.disabled ? "text.disabled" : "text.primary"}
                 >
-                  {tab.label}
+                  {item.label}
                 </Typography>
               }
               // sx={{
@@ -79,7 +79,7 @@ export const CTabs = (props: CTabsProps) => {
               //   fontWeight: 800,
               //   color: "text.primary",
               // }}
-              onClick={handleChangeTab?.[tIdx]}
+              onClick={handleChangeTab?.[iIdx]}
             />
           </div>
         </Tooltip>

@@ -6,11 +6,31 @@ import { SketchPicker } from "react-color";
 import { Button } from "../buttons/Button";
 import { mdiCheck } from "@mdi/js";
 
-export type ColorPickerProps = {
+type GenericColorPickerProps = {
   value: CSSProperties["color"];
   defaultValue?: string;
+  selectorSize?: string | number;
+};
+type DisabledColorPickerProps = GenericColorPickerProps & {
+  disabled: true;
+  onChange?: (color: string) => void;
+};
+
+type EnabledColorPickerProps = GenericColorPickerProps & {
+  disabled?: false;
   onChange: (color: string) => void;
 };
+
+export type ColorPickerProps =
+  | EnabledColorPickerProps
+  | DisabledColorPickerProps;
+
+// export type ColorPickerProps = {
+//   value: CSSProperties["color"];
+//   defaultValue?: string;
+//   onChange: (color: string) => void;
+//   selectorSize?: string | number;
+// };
 
 const simplifiedRgbaRegex =
   /^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*(\d+(?:\.\d+)?))?\)$/;
@@ -20,17 +40,17 @@ const simplifiedHexARegex = /^#(?:[0-9a-fA-F]{3,4}){1,2}$/;
 export const rgbaToObj = (rgbaString?: string, defaultRgbaStr?: string) => {
   const colorParts =
     rgbaString
-      ?.match(/rgba\((.*)\)/)?.[1]
+      ?.match(/rgba*\((.*)\)/)?.[1]
       ?.split(",")
       ?.map((val: string) => val?.trim?.()) ?? [];
   const defaultColor: any = defaultRgbaStr
     ? rgbaToObj(defaultRgbaStr)
     : { r: 0, g: 0, b: 0, a: 1 };
   return {
-    r: colorParts?.[0] ?? defaultColor,
-    g: colorParts?.[1] ?? defaultColor,
-    b: colorParts?.[2] ?? defaultColor,
-    a: colorParts?.[3] ?? defaultColor,
+    r: parseInt(colorParts?.[0] ?? defaultColor),
+    g: parseInt(colorParts?.[1] ?? defaultColor),
+    b: parseInt(colorParts?.[2] ?? defaultColor),
+    a: rgbaString?.match(/rgba\((.*)\)/) ? colorParts?.[3] ?? defaultColor : 1,
   };
 };
 
@@ -39,14 +59,15 @@ const extractRgbaValuesFromString = (rgba: string) => {
 };
 
 export const ColorPicker = (props: ColorPickerProps) => {
-  const { value, onChange, defaultValue } = props;
+  const { value, onChange, defaultValue, disabled, selectorSize = 28 } = props;
   const theme = useTheme();
   const [color, setColor] = React.useState(rgbaToObj(value, defaultValue));
   const [displayColorPicker, setDisplayColorPicker] = React.useState(false);
 
   const handleToggleColorPicker = React.useCallback(() => {
+    if (disabled) return;
     setDisplayColorPicker((current) => !current);
-  }, []);
+  }, [disabled]);
 
   const handleChangeColor = React.useCallback((color: any) => {
     setColor(color.rgb);
@@ -86,37 +107,40 @@ export const ColorPicker = (props: ColorPickerProps) => {
           ? hexToRgb(value)
           : value
         : value;
-    setColor(rgbaToObj(colorAdj, defaultValue));
+
+    const colorObj = rgbaToObj(colorAdj, defaultValue);
+    setColor(colorObj);
   }, [value, defaultValue]);
 
   return (
-    <div style={{ height: 28, width: 28 }}>
+    <div style={{ height: selectorSize, width: selectorSize }}>
       <Box
         sx={{
-          width: 28,
+          width: selectorSize,
           boxSizing: "border-box",
-          height: "28px",
+          height: selectorSize,
           padding: "4px",
 
           borderRadius: "1px",
           boxShadow: "0 0 0 1px rgba(0,0,0,.1)",
           display: "inline-block",
-          cursor: "pointer",
+          cursor: disabled ? undefined : "pointer",
         }}
         onClick={handleToggleColorPicker}
         ref={indicatorRef}
       >
         <Box
           sx={{
-            width: "28px",
+            width: selectorSize,
             borderRadius: "2px",
             border: "1px solid " + theme.palette.divider,
-            height: "28px",
-            backgroundColor: color?.r
-              ? `rgba(${color?.r ?? 0}, ${color?.g ?? 0}, ${color?.b ?? 0}, ${
-                  color?.a ?? 1
-                })`
-              : "#fff",
+            height: selectorSize,
+            backgroundColor:
+              "r" in color
+                ? `rgba(${color?.r ?? 0}, ${color?.g ?? 0}, ${color?.b ?? 0}, ${
+                    color?.a ?? 1
+                  })`
+                : "#fff",
           }}
         />
       </Box>

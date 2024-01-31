@@ -1,25 +1,29 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { mdiExpandAll, mdiDelete } from "@mdi/js";
-import {
-  SvgIconProps,
-  styled,
-  Box,
-  Stack,
-  Typography,
-  useTheme,
-  alpha,
-} from "@mui/material";
+import { mdiChevronDown, mdiChevronRight, mdiDotsHorizontal } from "@mdi/js";
+import { styled, Box, Stack, Typography, useTheme, alpha } from "@mui/material";
 import { TreeItemProps, TreeItem, treeItemClasses } from "@mui/x-tree-view";
-import React from "react";
+import {
+  ReactNode,
+  Ref,
+  forwardRef,
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Button } from "../buttons/Button";
+import { DropdownMenu } from "../dropdown/DropdownMenu";
+import { DropdownMenuItem } from "../dropdown/DropdownMenuItem";
+import { AdditionalActionType } from "./CTreeView";
+import { useDraggable, useDroppable } from "@dnd-kit/core";
 
 export type StyledTreeItemProps = Omit<TreeItemProps, "nodeId" | "children"> & {
   bgColor?: string;
   bgColorForDarkMode?: string;
   color?: string;
   colorForDarkMode?: string;
-  labelIcon?: React.ElementType<SvgIconProps> | null;
+  labelIcon?: ReactNode;
   labelInfo?: string;
   labelText: string;
   nodeId: number | string;
@@ -27,15 +31,17 @@ export type StyledTreeItemProps = Omit<TreeItemProps, "nodeId" | "children"> & {
   disableAddAction?: boolean;
   disableDeleteAction?: boolean;
 
-  //   item: any;
-  // onEdit: (id: number, item: any, idFieldName: string) => void
-  //   onDelete: (id: number, item: any, idFieldName: string) => void;
-  //   onAddChild: (id: number, item: any, idFieldName: string) => void;
-
   onDelete?: (id: string) => void;
   onAddChild?: (id: string) => void;
   idFieldName?: string;
   children?: StyledTreeItemProps[];
+
+  actions?: AdditionalActionType[] | ((item: any) => AdditionalActionType[]);
+  additionalActions?:
+    | AdditionalActionType[]
+    | ((item: any) => AdditionalActionType[]);
+  useDraggable?: boolean;
+  toggleExpand?: (id: string) => void;
 };
 
 const StyledTreeItemRoot = styled(TreeItem)<TreeItemProps & { nodeId: string }>(
@@ -43,10 +49,10 @@ const StyledTreeItemRoot = styled(TreeItem)<TreeItemProps & { nodeId: string }>(
     color: theme.palette.text.secondary,
     [`& .${treeItemClasses.content}`]: {
       color: theme.palette.text.secondary,
-      borderTopRightRadius: theme.spacing(2),
-      borderBottomRightRadius: theme.spacing(2),
+      borderTopRightRadius: theme.spacing(0.5),
+      borderBottomRightRadius: theme.spacing(0.5),
       paddingLeft: "4px !important",
-      paddingRight: "0 !important",
+      paddingRight: "4px !important",
       fontWeight: theme.typography.fontWeightMedium,
       "&.Mui-expanded": {
         fontWeight: theme.typography.fontWeightRegular,
@@ -55,7 +61,7 @@ const StyledTreeItemRoot = styled(TreeItem)<TreeItemProps & { nodeId: string }>(
       "&:hover": {
         backgroundColor: theme.palette.action.hover,
       },
-      "&.Mui-focused, &.Mui-selected, &.Mui-selected.Mui-focused": {
+      "&.Mui-selected": {
         backgroundColor: `var(--tree-view-bg-color, ${theme.palette.action.selected})`,
         color: "var(--tree-view-color)",
       },
@@ -77,9 +83,9 @@ const StyledTreeItemRoot = styled(TreeItem)<TreeItemProps & { nodeId: string }>(
   })
 ) as any;
 
-export const StyledTreeItem = React.forwardRef(function StyledTreeItem(
+export const StyledTreeItem = forwardRef(function StyledTreeItem(
   props: StyledTreeItemProps,
-  ref: React.Ref<HTMLUListElement>
+  ref: Ref<HTMLUListElement>
 ) {
   const theme = useTheme();
   const {
@@ -90,106 +96,239 @@ export const StyledTreeItem = React.forwardRef(function StyledTreeItem(
     labelText,
     colorForDarkMode,
     bgColorForDarkMode,
-    onDelete,
-    // idFieldName,
-    // item,
-    onAddChild,
     nodeId,
     disableBorderLeft,
-    disableAddAction,
-    disableDeleteAction,
+    additionalActions,
+    useDraggable: doUseDraggable,
+    actions,
+    toggleExpand,
     ...other
   } = props;
 
-  const styleProps = {
-    borderLeft: disableBorderLeft
-      ? undefined
-      : `1px dashed ` + alpha(theme.palette.primary.main, 0.66),
-    "--tree-view-color":
-      theme.palette.mode !== "dark" ? color : colorForDarkMode,
-    "--tree-view-bg-color":
-      theme.palette.mode !== "dark" ? bgColor : bgColorForDarkMode,
-  };
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    active: isDragActive,
+  } = useDraggable({
+    id: nodeId as string,
+    data: props,
+    disabled: !doUseDraggable,
+  });
+  const { isOver, setNodeRef: setNodeDropRef } = useDroppable({
+    id: nodeId as string,
+    disabled: !!transform,
+    data: props,
+  });
+
+  // console.log("ATTR", attributes, listeners);
+
+  const moreActionsButtonRef = useRef<HTMLButtonElement>(null);
+  const [ui, setUi] = useState({ moreActionsOpen: false });
+
+  const styleProps = useMemo(
+    () => ({
+      borderLeft: disableBorderLeft
+        ? undefined
+        : `1px dashed ` + alpha(theme.palette.primary.main, 0.66),
+      backgroundColor: isOver ? theme.palette.action.hover : undefined,
+      "--tree-view-color":
+        theme.palette.mode !== "dark" ? color : colorForDarkMode,
+      "--tree-view-bg-color":
+        theme.palette.mode !== "dark" ? bgColor : bgColorForDarkMode,
+    }),
+    [
+      theme.palette,
+      color,
+      colorForDarkMode,
+      bgColor,
+      bgColorForDarkMode,
+      disableBorderLeft,
+      isOver,
+    ]
+  );
+
+  const handleMoreActionsClick = useCallback((e: any) => {
+    e?.stopPropagation?.();
+    setUi((current) => ({
+      ...current,
+      moreActionsOpen: !current?.moreActionsOpen,
+    }));
+  }, []);
+
+  const stopPropagation = useCallback((e: any) => e.stopPropagation(), []);
+  const stopPropagationPreventDefault = useCallback((e: any) => {
+    e.stopPropagation();
+    e.preventDefault();
+  }, []);
+
+  const preventTreeItemClickWhenDraggin = useMemo(
+    () =>
+      isDragActive
+        ? {
+            onClick: (e: any) => {
+              e.stopPropagation();
+              e.preventDefault();
+            },
+          }
+        : {},
+    [isDragActive]
+  );
+
+  const actionsInt = useMemo(() => {
+    if (!actions) return [];
+    return typeof actions === "function" ? actions(props) : actions;
+  }, [actions, props]);
+  const additionalActionsInt = useMemo(() => {
+    if (!additionalActions) return [];
+    return typeof additionalActions === "function"
+      ? additionalActions(props)
+      : additionalActions;
+  }, [additionalActions, props]);
 
   return (
-    <StyledTreeItemRoot
-      nodeId={nodeId as string}
-      label={
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            p: 0.5,
-            pr: 0,
-            gap: 1,
-            justifyContent: "space-between",
-          }}
-        >
-          <Stack direction="row" maxWidth={"calc(100% - 64px)"}>
-            <Box component={LabelIcon as any} color="inherit" sx={{ mr: 1 }} />
-
-            <Typography
-              variant="body2"
-              sx={{
-                fontWeight: "inherit",
-                flexGrow: 1,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
+    <>
+      <StyledTreeItemRoot
+        {...attributes}
+        {...listeners}
+        collapseIcon={
+          <Button
+            iconButton={true}
+            icon={mdiChevronDown}
+            type="text"
+            onPointerDown={stopPropagationPreventDefault}
+            onKeyDown={stopPropagationPreventDefault}
+            onClick={() => toggleExpand?.(nodeId as string)}
+          />
+        }
+        expandIcon={
+          <Button
+            iconButton={true}
+            icon={mdiChevronRight}
+            type="text"
+            onPointerDown={stopPropagation}
+            onKeyDown={stopPropagation}
+            onClick={() => toggleExpand?.(nodeId as string)}
+          />
+        }
+        ref={setNodeRef}
+        nodeId={nodeId as string}
+        label={
+          <Box
+            ref={setNodeDropRef}
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              p: 0.5,
+              pr: 0,
+              gap: 1,
+              justifyContent: "space-between",
+            }}
+            {...preventTreeItemClickWhenDraggin}
+          >
+            <Stack
+              direction="row"
+              maxWidth={"calc(100% - 64px)"}
+              alignItems="center"
             >
-              {labelText}
-            </Typography>
-          </Stack>
-          <Stack direction="row" alignItems="center">
-            <Typography variant="caption" color="inherit">
-              {labelInfo}
-            </Typography>
+              <Box
+                color="inherit"
+                sx={{
+                  mr: 1,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+                onPointerDown={stopPropagation}
+                onKeyDown={stopPropagation}
+              >
+                {LabelIcon}
+              </Box>
 
-            <Stack direction="row" justifyContent="flex-end" gap={1}>
-              {!disableAddAction && (
-                <Button
-                  iconButton={true}
-                  icon={mdiExpandAll}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    !!nodeId && onAddChild?.(nodeId as any);
-                  }}
-                  iconSize="16px"
-                  sx={{ height: 24, width: 24 }}
-                />
-              )}
-              {!disableDeleteAction && (
-                <Button
-                  iconButton={true}
-                  icon={mdiDelete}
-                  onClick={(e) => {
-                    console.log("WHY NOT DELETE? ", nodeId, onDelete);
-                    e.stopPropagation();
-                    !!nodeId && onDelete?.(nodeId as any);
-                  }}
-                  size="small"
-                  iconSize="16px"
-                  sx={{ height: 24, width: 24 }}
-                />
-              )}
-              {/* {additionalActions?.map((action, aIdx) => (
-                  <Button
-                    key={aIdx}
-                    iconButton={true}
-                    icon={action.icon}
-                    onClick={() => {
-                      !!idFieldName && action?.action?.(item, idFieldName)
-                    }}
-                  />
-                ))} */}
+              <Typography
+                variant="body2"
+                sx={{
+                  fontWeight: "inherit",
+                  flexGrow: 1,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {labelText}
+              </Typography>
             </Stack>
-          </Stack>
-        </Box>
-      }
-      style={styleProps}
-      {...other}
-      ref={ref}
-    />
+            <Stack direction="row" alignItems="center">
+              <Typography variant="caption" color="inherit">
+                {labelInfo}
+              </Typography>
+
+              <Stack direction="row" justifyContent="flex-end" gap={1}>
+                {actionsInt?.map?.((action, aIdx) => {
+                  return (
+                    <Button
+                      iconButton={true}
+                      icon={action.icon}
+                      tooltip={action.tooltip}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const actionFn = action.action as any;
+                        !!nodeId && actionFn?.(nodeId as any, e);
+                      }}
+                      onPointerDown={stopPropagation}
+                      onKeyDown={stopPropagation}
+                      iconSize="16px"
+                      sx={{ height: 24, width: 24 }}
+                    />
+                  );
+                })}
+
+                {!!additionalActions?.length && (
+                  <Button
+                    ref={moreActionsButtonRef}
+                    iconButton={true}
+                    icon={mdiDotsHorizontal}
+                    onClick={handleMoreActionsClick}
+                    size="small"
+                    iconSize="16px"
+                    onPointerDown={stopPropagation}
+                    onKeyDown={stopPropagation}
+                    sx={{ height: 24, width: 24 }}
+                  />
+                )}
+              </Stack>
+            </Stack>
+          </Box>
+        }
+        style={styleProps}
+        {...other}
+      />
+      <DropdownMenu
+        // usePortal={true}
+        anchorEl={moreActionsButtonRef.current}
+        open={ui?.moreActionsOpen}
+        // onPointerDown={stopPropagation}
+        // onKeyDown={stopPropagation}
+        onClose={handleMoreActionsClick as any}
+      >
+        {additionalActionsInt?.map((action, aIdx) => (
+          <DropdownMenuItem
+            key={aIdx}
+            id={"action_" + aIdx}
+            label={action.label}
+            icon={action.icon}
+            onPointerDown={stopPropagation}
+            onKeyDown={stopPropagation}
+            onClick={(e: any) => {
+              e.stopPropagation();
+              action.action(nodeId, e);
+              handleMoreActionsClick(e);
+            }}
+            disabled={action.disabled}
+          ></DropdownMenuItem>
+        ))}
+      </DropdownMenu>
+    </>
   );
 });

@@ -24,6 +24,7 @@ type CommonClickTextFieldProps = {
   onClickAway?: () => void;
   handleRemoveItem?: () => void;
   onToggle?: (isEdit: boolean) => void;
+  disabled?: boolean;
 };
 
 type TextClickTextFieldProps = {
@@ -53,6 +54,7 @@ export const ClickTextFieldComponent = (props: ClickTextFieldProps) => {
     onClickAway,
     handleRemoveItem,
     onToggle,
+    disabled,
   } = props as TextClickTextFieldProps &
     AutoCompleteClickTextFieldProps &
     CommonClickTextFieldProps;
@@ -93,7 +95,7 @@ export const ClickTextFieldComponent = (props: ClickTextFieldProps) => {
     [validateInput]
   );
 
-  return !ui?.isEdit ? (
+  return !ui?.isEdit || disabled ? (
     <Stack direction="row" maxWidth={248} alignItems="center" gap={1}>
       <Typography
         fontWeight={700}
@@ -108,24 +110,27 @@ export const ClickTextFieldComponent = (props: ClickTextFieldProps) => {
         {value ?? ""}
       </Typography>
       {additionalLabelComponent}
-
-      <Box minWidth={24} minHeight={24}>
-        <Button
-          icon={mdiPencil}
-          iconButton={true}
-          type="text"
-          onClick={handleToggleIsEdit}
-        />
-      </Box>
-      {handleRemoveItem && (
-        <Box minWidth={24} minHeight={24}>
-          <Button
-            icon={mdiDelete}
-            iconButton={true}
-            type="text"
-            onClick={handleRemoveItem}
-          />
-        </Box>
+      {!disabled && (
+        <>
+          <Box minWidth={24} minHeight={24}>
+            <Button
+              icon={mdiPencil}
+              iconButton={true}
+              type="text"
+              onClick={handleToggleIsEdit}
+            />
+          </Box>
+          {handleRemoveItem && (
+            <Box minWidth={24} minHeight={24}>
+              <Button
+                icon={mdiDelete}
+                iconButton={true}
+                type="text"
+                onClick={handleRemoveItem}
+              />
+            </Box>
+          )}
+        </>
       )}
     </Stack>
   ) : (

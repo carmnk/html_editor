@@ -1,8 +1,8 @@
-import React, {
+import {
   CSSProperties,
   HTMLProps,
   PropsWithChildren,
-  useEffect,
+  MouseEvent,
   useMemo,
 } from "react";
 import { HtmlEditorElementType } from "./EditorState";
@@ -34,7 +34,8 @@ export const ElementBox = (props: PropsWithChildren<ElementBoxProps>) => {
 
   const { callbackRef: ref, isHovering } = useElementHover();
 
-  const className = element?.attributes?.className;
+  const className =
+    "attributes" in element ? element?.attributes?.className : undefined;
   const stylesFromClasses = getStylesFromClasses(
     className ?? "",
     editorState?.cssWorkspaces
@@ -45,7 +46,12 @@ export const ElementBox = (props: PropsWithChildren<ElementBoxProps>) => {
       !isProduction &&
       (isHovering || editorState?.selectedHtmlElementName === element.id)
         ? {
-            border: "1px solid " + theme.palette.primary.main,
+            border:
+              "1px " +
+              (editorState?.selectedHtmlElementName === element.id
+                ? "solid "
+                : "dashed ") +
+              theme.palette.primary.main,
             borderRadius: "1px",
             "& >div:first-of-type": {
               display: "block",
@@ -54,9 +60,12 @@ export const ElementBox = (props: PropsWithChildren<ElementBoxProps>) => {
           }
         : {};
 
+    const styleAttributes =
+      "attributes" in element ? element?.attributes?.style ?? {} : {};
+
     const aggregatedUserStyles = {
       ...stylesFromClasses,
-      ...(element.attributes?.style ?? {}),
+      ...styleAttributes,
     };
     const userOverridesEditorHoverStyles: CSSProperties = {};
     if ("borderWidth" in aggregatedUserStyles) {
@@ -75,10 +84,11 @@ export const ElementBox = (props: PropsWithChildren<ElementBoxProps>) => {
       userOverridesEditorHoverStyles.borderRadius =
         aggregatedUserStyles.borderRadius + " !important";
     }
+
     return {
       ...sx,
       ...stylesFromClasses,
-      ...(element.attributes?.style ?? {}),
+      ...styleAttributes,
       ...additionalHoverStyles,
       ...userOverridesEditorHoverStyles,
       //   backgroundColor: "rgba(0,150,136,0.1)",
@@ -86,11 +96,10 @@ export const ElementBox = (props: PropsWithChildren<ElementBoxProps>) => {
   }, [
     isHovering,
     editorState?.selectedHtmlElementName,
-    element.id,
     theme,
-    element.attributes?.style,
     stylesFromClasses,
     isProduction,
+    element,
   ]);
 
   // useEffect(() => {
@@ -98,16 +107,21 @@ export const ElementBox = (props: PropsWithChildren<ElementBoxProps>) => {
   // }, [isHovering, element, onSelectElement]);
 
   const isOverheadHtmlElement = ["html", "head", "body"].includes(element.type);
+  const elementAttributs =
+    "attributes" in element
+      ? (element?.attributes as HTMLProps<HTMLLinkElement> & {
+          href: string;
+        })
+      : ({} as HTMLProps<HTMLLinkElement>);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { style, href, ...styleLessAttributes } =
-    (element.attributes as HTMLProps<HTMLLinkElement> & {
-      href: string;
-    }) ?? {};
+  const { style, href, ...styleLessAttributes } = elementAttributs;
 
   const boxProps = useMemo(
     () => ({
-      id: isOverheadHtmlElement ? element.type + "_" + element?.id : element.id,
-      component: isOverheadHtmlElement ? "div" : element.type,
+      // id: isOverheadHtmlElement ? element.type + "_" + element?.id : element.id,
+      component: isOverheadHtmlElement
+        ? ("div" as const)
+        : (element.type as any),
       key: element.id,
       ...(styleLessAttributes ?? {}),
       sx: styles,
@@ -118,7 +132,7 @@ export const ElementBox = (props: PropsWithChildren<ElementBoxProps>) => {
   const linkProps = useMemo(() => {
     if (element.type === "a") {
       return {
-        onClick: (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
+        onClick: (e: MouseEvent<HTMLAnchorElement, MouseEvent>) => {
           e.preventDefault();
           const attributes =
             element.attributes as HTMLProps<HTMLLinkElement> & {
@@ -135,15 +149,24 @@ export const ElementBox = (props: PropsWithChildren<ElementBoxProps>) => {
     return {};
   }, [element, navigate]);
 
+  const uiEditorHandlers = useMemo(() => {
+    return {
+      onClick: (e: MouseEvent<HTMLDivElement, MouseEvent>) => {
+        e.stopPropagation();
+        onSelectElement(element, isHovering);
+      },
+    };
+  }, [onSelectElement, element, isHovering]);
+
   return ["br", "hr", "img"].includes(element?.type) ? (
     <Box {...boxProps} {...linkProps} ref={ref} />
   ) : (
-    <Box {...linkProps} {...boxProps} ref={ref}>
+    <Box {...linkProps} {...boxProps} {...uiEditorHandlers} ref={ref}>
       {/* label */}
       {!isProduction && (
         <Box
-          onMouseOver={() => {}}
-          onMouseOut={() => {}}
+          // onMouseOver={() => {}}
+          // onMouseOut={() => {}}
           sx={{
             display: "none",
             position: "absolute",
@@ -158,7 +181,7 @@ export const ElementBox = (props: PropsWithChildren<ElementBoxProps>) => {
         </Box>
       )}
 
-      {element?.content || children}
+      {("content" in element ? element?.content : children) || children}
     </Box>
   );
 };

@@ -26,7 +26,6 @@ export type CButtonProps = Omit<ButtonProps, "type" | "color"> & {
   iconColor?: string;
   disableTabstop?: boolean;
   fontColor?: string;
-  buttonColor?: string;
   iconSize?: string;
 };
 
@@ -49,7 +48,6 @@ export const Button = React.forwardRef(
       iconColor,
       fontColor,
       disableTabstop,
-      buttonColor,
       ...rest
     } = props;
     const theme = useTheme();
@@ -109,29 +107,29 @@ export const Button = React.forwardRef(
     ) : (
       endIcon
     );
-    const padding = iconButton ? "4px" : "8px 12px";
+    const padding = iconButton ? "4px" : "auto";
     const commonStyles = {
       minWidth: 0,
       textTransform: "none",
       display: "flex",
       justifyContent: iconButton ? "center" : "space-between",
-      height: iconButton ? 28 : 32,
+      height: iconButton ? 28 : "auto",
       padding,
       boxShadow: "none",
       "& .MuiButton-startIcon": {
         ml: 0,
         mr: iconButton ? 0 : "12px",
       },
-      width: iconButton && dropdown ? 53 : iconButton ? 28 : "max-content",
+      width: iconButton && dropdown ? 53 : iconButton ? 28 : "auto",
     } as any;
 
     const Button =
       type === "secondary" ? (
         <MuiButton
-          color={buttonColor as any}
+          color={color as any}
           ref={ref}
           variant="outlined"
-          size="small"
+          // size="small"
           disableElevation
           startIcon={startIconAdj}
           endIcon={endIconAdj}
@@ -170,7 +168,7 @@ export const Button = React.forwardRef(
         </MuiButton>
       ) : type === "text" ? (
         <MuiButton
-          color={buttonColor as any}
+          color={color as any}
           ref={ref}
           size="small"
           variant="text"
@@ -213,7 +211,7 @@ export const Button = React.forwardRef(
         </MuiButton>
       ) : (
         <MuiButton
-          color={buttonColor as any}
+          color={color as any}
           ref={ref}
           variant="contained"
           disableElevation
@@ -244,6 +242,7 @@ export const Button = React.forwardRef(
           )}
         </MuiButton>
       );
+
     const ButtonWithTooltip = props.tooltip ? (
       <Tooltip arrow={true} placement={"top"} title={props.tooltip}>
         <div>{Button}</div>

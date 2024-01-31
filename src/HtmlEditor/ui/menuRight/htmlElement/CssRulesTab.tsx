@@ -4,7 +4,7 @@ import { useCallback, useMemo } from "react";
 import { getStylesFromClasses } from "../../../renderElements";
 import { CSS_RULES_VALUES_OPTIONS } from "../../../defs/CssRuleNamesDict";
 import { CSelect } from "../../../../components/inputs/CSelect";
-import { EditorControllerType } from "../../../editorController";
+import { EditorControllerType } from "../../../editorController/editorController";
 import { ClickTextField } from "../../../../components/inputs/ClickTextField";
 import { cssRulesFilterOptions } from "./_defHtmlElementCssRulesFilterOptions";
 
@@ -31,7 +31,7 @@ export const RightMenuCssRuleTab = (props: RightMenuCssRuldeTabProps) => {
   const theme = useTheme();
   const activeEditRule =
     editorState?.ui?.detailsMenu?.htmlElement?.editCssRuleName;
-  const className = selectedHtmlElement?.attributes?.className;
+  const className = (selectedHtmlElement as any)?.attributes?.className;
 
   const classAttributes = useMemo(
     () =>

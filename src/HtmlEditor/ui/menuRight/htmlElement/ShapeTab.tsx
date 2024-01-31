@@ -6,7 +6,7 @@ import { HTML_BORDER_STYLES_OPTIONS } from "../../../defs/CssBorderStyleDict";
 import { borderRadiusCornerModeButtons } from "../../defs/_defCssPropertyButtonGroups";
 import { ButtonGroup } from "../../../../components/buttons/ButtonGroupButton";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { EditorControllerType } from "../../../editorController";
+import { EditorControllerType } from "../../../editorController/editorController";
 import { CssSizeSelector } from "./CssSizeSelector";
 
 export type RightMenuShapeTabProps = {

@@ -1,6 +1,6 @@
 import { Box, TextField, useTheme } from "@mui/material";
 import { CSSProperties, ChangeEvent, useMemo } from "react";
-import { EditorControllerType } from "../../../editorController";
+import { EditorControllerType } from "../../../editorController/editorController";
 
 export type StyleSpacingSelectorProps = {
   elementStyles: CSSProperties;

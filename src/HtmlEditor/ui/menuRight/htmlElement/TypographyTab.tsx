@@ -2,10 +2,10 @@ import { Stack, Typography, Box, useTheme } from "@mui/material";
 import { CGrid } from "../../../../components/basics/CGrid";
 import { ColorPicker } from "../../../../components/color/ColorPicker";
 import { CSelect } from "../../../../components/inputs/CSelect";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { HTML_FONT_STYLES_OPTIONS } from "../../../defs/CssFontStyleDict";
 import { CssSizeSelector } from "./CssSizeSelector";
-import { EditorControllerType } from "../../../editorController";
+import { EditorControllerType } from "../../../editorController/editorController";
 
 export type RightMenuTypographyTabProps = {
   editorController: EditorControllerType;
@@ -13,8 +13,11 @@ export type RightMenuTypographyTabProps = {
 
 export const RightMenuTypographyTab = (props: RightMenuTypographyTabProps) => {
   const { editorController } = props;
-  const { selectedHtmlElementStyleAttributes: elementStyles, actions } =
-    editorController;
+  const {
+    selectedHtmlElementStyleAttributes: elementStyles,
+    actions,
+    editorState,
+  } = editorController;
   const { changeCurrentHtmlElementStyleAttribute } = actions.htmlElement;
   const theme = useTheme();
 
@@ -30,6 +33,19 @@ export const RightMenuTypographyTab = (props: RightMenuTypographyTabProps) => {
       changeCurrentHtmlElementStyleAttribute(newValue, "fontStyle"),
     [changeCurrentHtmlElementStyleAttribute]
   );
+
+  const handleChangeFontFamily = useCallback(
+    (newValue: string) =>
+      changeCurrentHtmlElementStyleAttribute(newValue, "fontFamily"),
+    [changeCurrentHtmlElementStyleAttribute]
+  );
+
+  const fontOptions = useMemo(() => {
+    return editorState.fonts.map((font) => ({
+      label: font,
+      value: font,
+    }));
+  }, [editorState.fonts]);
 
   return (
     <>
@@ -61,6 +77,16 @@ export const RightMenuTypographyTab = (props: RightMenuTypographyTabProps) => {
                 value={elementStyles?.fontStyle}
                 onChange={handleChangeFontStyle}
                 options={HTML_FONT_STYLES_OPTIONS}
+              />
+            </Box>
+
+            <Box>Font Family</Box>
+            <Box display="flex" justifyContent="flex-end">
+              <CSelect
+                disableLabel={true}
+                value={elementStyles?.fontFamily}
+                onChange={handleChangeFontFamily}
+                options={fontOptions}
               />
             </Box>
           </CGrid>

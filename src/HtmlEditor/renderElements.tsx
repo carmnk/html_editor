@@ -1,31 +1,84 @@
-import { HtmlEditorElementType } from "./EditorState";
+import {
+  HtmlEditorComponentElementTypes,
+  HtmlEditorElementKeyType,
+  HtmlEditorElementType,
+} from "./EditorState";
 import { StyledTreeItemProps } from "../components/treeview/CTreeItem";
 import { v4 as uuid } from "uuid";
 import { ElementBox } from "./ElementBox";
 import { EditorStateType } from "./EditorState";
+import { Button } from "../components/buttons/Button";
+import { Box, Chip, Typography } from "@mui/material";
+import { mdiCodeBlockTags, mdiReact } from "@mdi/js";
+import Icon from "@mdi/react";
+import { CTabs } from "../components/navigation/CTabs";
+import { EditorControllerType } from "./editorController/editorController";
+import { baseComponents } from "./defs/baseComponents";
+import { CBottomNavigation } from "../components/navigation/CBottomNavigation";
+import { CListNavigation } from "../components/navigation/CListNavigation";
+
+export const isStringLowerCase = (str: string): boolean => {
+  return str === str.toLowerCase();
+};
+
+export const isComponentType = (
+  type: HtmlEditorElementKeyType
+): type is HtmlEditorComponentElementTypes =>
+  !isStringLowerCase(type.slice(0, 1));
 
 export const renderHtmlElements = (
   elements: HtmlEditorElementType[],
-  editorState: EditorStateType,
+  editorController: EditorControllerType,
   onSelectElement: (
     element: HtmlEditorElementType,
     isHovering: boolean
   ) => void,
-  isProduction?: boolean
+  isProduction?: boolean,
+  icons?: { [key: string]: string }
 ): React.ReactNode => {
+  const { editorState, actions, appState } = editorController;
   const rawElements = elements.map((element, eIdx) => {
-    // styles for UI editor
-    // const sx = {
-    //   position: "relative",
-    //   ":hover": {
-    //     border: "1px solid rgba(0,150,136,0.5)",
-    //     borderRadius: "1px",
-    //     "& >div:first-of-type": {
-    //       display: "block",
-    //     },
-    //   },
-    // };
-    return (
+    const typeFirstLetter = element.type.slice(0, 1);
+    const isHtmlElement = isStringLowerCase(typeFirstLetter);
+    const iconKey = ((element as any)?.props?.icon as string) ?? "";
+    const elementAdj = iconKey
+      ? {
+          ...element,
+          props: {
+            ...(((element as any)?.props as any) ?? {}),
+            icon: icons?.[iconKey],
+          },
+        }
+      : element;
+
+    const navValueState = (appState as any)?.state?.[element?.id] ?? {};
+    // if (element?.type === "Tabs") {
+    //   console.log("navValueState", navValueState, appState);
+    // }
+    const onTabChange = (tabValue: string) => {
+      console.log("CLICKED TAB", tabValue);
+      appState.actions.updateProperty(element?.id, tabValue);
+    };
+
+    const tabChildren =
+      element?.type === "NavContainer"
+        ? (() => {
+            const sourceControlElementId = element?.props?.navigationElementId;
+
+            if (!sourceControlElementId) return [];
+            const activeTab = appState?.state?.[sourceControlElementId];
+            const activeId = element?.props?.items?.find(
+              (item: any) => item.value === activeTab
+            )?.childId;
+            const activeChild = element?.children?.find?.(
+              (child) => child.id === activeId
+            );
+            const children = activeChild ? [activeChild] : [];
+            return children;
+          })()
+        : [];
+
+    return isHtmlElement ? (
       <ElementBox
         element={element}
         onSelectElement={onSelectElement}
@@ -36,35 +89,115 @@ export const renderHtmlElements = (
         {!!element?.children?.length &&
           renderHtmlElements(
             element.children,
-            editorState,
+            editorController,
             onSelectElement,
-            isProduction
+            isProduction,
+            icons
           )}
       </ElementBox>
-    );
+    ) : isComponentType(element.type) ? (
+      element?.type === "Button" ? (
+        <Button {...((elementAdj as any)?.props ?? {})}>TEST</Button>
+      ) : element?.type === "Chip" ? (
+        <Chip {...(element?.props ?? {})} />
+      ) : element?.type === "Typography" ? (
+        <Typography {...(element?.props ?? {})} />
+      ) : //  NAVIGATION ELEMENTS (slightly different interface)
+      element?.type === "Tabs" ? (
+        <CTabs
+          {...((element?.props as any) ?? {})}
+          onChange={onTabChange}
+          value={navValueState}
+        />
+      ) : element?.type === "BottomNavigation" ? (
+        <CBottomNavigation
+          {...((element?.props as any) ?? {})}
+          onChange={onTabChange}
+          value={navValueState}
+        />
+      ) : element?.type === "ListNavigation" ? (
+        <CListNavigation
+          {...((element?.props as any) ?? {})}
+          onChange={onTabChange}
+          value={navValueState}
+        />
+      ) : // Navigation Container -> specific render case (but could be component, too)
+      element?.type === "NavContainer" ? (
+        (() => {
+          const { children, ...childLessProps } = element?.props ?? {};
+          return (
+            <Box {...(childLessProps ?? {})}>
+              {!!tabChildren?.length &&
+                renderHtmlElements(
+                  tabChildren,
+                  editorController,
+                  onSelectElement,
+                  isProduction,
+                  icons
+                )}
+            </Box>
+          );
+        })()
+      ) : null
+    ) : null;
   });
   return rawElements;
 };
 
 export const mapHtmlElementsToTreeItems = (
-  elements: HtmlEditorElementType[]
+  elements: HtmlEditorElementType[],
+  isDraggable: boolean,
+  rootElements?: HtmlEditorElementType[],
+  parentNavContainerId?: string
 ): StyledTreeItemProps[] => {
   const treeItems = elements.map((element, eIdx) => {
     const id = element?.id ?? uuid();
+
+    const parentNavContainer = parentNavContainerId
+      ? findElementById(parentNavContainerId, rootElements ?? [])?.[0]
+      : null;
+    const parentNavContainerItems =
+      (parentNavContainer as any)?.props?.items ?? [];
+    const caseName = parentNavContainerItems?.find(
+      (item: any) => item.childId === id
+    )?.value;
+
+    console.log(parentNavContainer, parentNavContainerItems, caseName);
+
     return {
       key: id,
-      disableAddAction:
-        ["html", "head"].includes(element.type) || element?.content,
-      disableDeleteAction: ["html", "head", "body"].includes(
-        element.type ?? ""
-      ),
+      type: element.type,
+      parentNavContainerId,
       nodeId: id,
-      labelText: element.type + (element?.id ? `#${element.id}` : ""),
+      element,
+      labelIcon: (
+        <Icon
+          path={
+            isComponentType(element.type)
+              ? baseComponents?.find((com) => com.type === element?.type)
+                  ?.icon ?? mdiReact
+              : mdiCodeBlockTags
+          }
+          size={1}
+        />
+      ),
+      labelText:
+        (parentNavContainerId ? (caseName ? "↦" + caseName + ":" : "⚠:") : "") +
+        (element.type +
+          ((element as any).attributes?.id ?? (element as any)?.userID
+            ? `#${(element as any).attributes?.id ?? (element as any)?.userID}`
+            : "")),
       children: element?.children?.length
-        ? mapHtmlElementsToTreeItems(element.children)
+        ? mapHtmlElementsToTreeItems(
+            element.children,
+            isDraggable,
+            rootElements ?? elements,
+            element?.type === "NavContainer" ? element?.id : undefined
+          )
         : [],
-    };
-  });
+      useDraggable: isDraggable,
+    } as StyledTreeItemProps;
+  }) as StyledTreeItemProps[];
   return treeItems as any;
 };
 
