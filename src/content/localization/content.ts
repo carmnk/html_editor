@@ -1,0 +1,1 @@
+export const REQUIRED_FIELD_HELPER_TEXT = 'Dieses Feld ist erforderlich'

@@ -1,52 +1,53 @@
-import { Stack, Typography, Box, TextField, useTheme } from "@mui/material";
-import { CGrid } from "../../../../components/basics/CGrid";
+import React, { ChangeEvent, useCallback, useMemo } from 'react'
+import { Stack, Typography, Box, TextField, useTheme } from '@mui/material'
+import { CGrid } from '../../../../components/basics/CGrid'
 import {
   displayButtons,
   directionButtons,
   alignButtons,
   justifyButtons,
   positionButtons,
-} from "../../defs/_defCssPropertyButtonGroups";
-import { StyleSpacingSelector } from "./CssSpacingSelector";
-import { ButtonGroup } from "../../../../components/buttons/ButtonGroupButton";
-import { ChangeEvent, useCallback, useMemo } from "react";
-import { EditorControllerType } from "../../../editorController/editorController";
-import { CssSizeSelector } from "./CssSizeSelector";
-import { getSizeMode } from "../../../utils";
-import { CUSTOM_CSS_PROPERTY_BUTTON_GROUP_DEFS } from "../../defs/_defCssPropertyCustomButtonGroups";
+} from '../../defs/_defCssPropertyButtonGroups'
+import { StyleSpacingSelector } from './CssSpacingSelector'
+import { ButtonGroup } from '../../../../components/buttons/ButtonGroupButton'
+import { CssSizeSelector } from './CssSizeSelector'
+import { getSizeMode } from '../../../utils'
+import { CUSTOM_CSS_PROPERTY_BUTTON_GROUP_DEFS } from '../../defs/_defCssPropertyCustomButtonGroups'
+import { EditorControllerType } from '../../../editorController/editorControllerTypes'
+import { Flex } from '../../../../components/basics/Flex'
 
 export type RightMenuLayoutTabProps = {
-  editorController: EditorControllerType;
-};
+  editorController: EditorControllerType
+}
 
 const editableProps = [
-  "display",
-  "flexDirection",
-  "alignItems",
-  "justifyContent",
-  "gap",
-  "position",
-  "width",
-  "height",
-  "backgroundColor",
-  "color",
-  "borderWidth",
-  "borderColor",
-  "borderStyle",
-];
+  'display',
+  'flexDirection',
+  'alignItems',
+  'justifyContent',
+  'gap',
+  'position',
+  'width',
+  'height',
+  'backgroundColor',
+  'color',
+  'borderWidth',
+  'borderColor',
+  'borderStyle',
+]
 
-const { transformers, isSelectedFns } = CUSTOM_CSS_PROPERTY_BUTTON_GROUP_DEFS;
+const { transformers, isSelectedFns } = CUSTOM_CSS_PROPERTY_BUTTON_GROUP_DEFS
 
 export const RightMenuLayoutTab = (props: RightMenuLayoutTabProps) => {
-  const { editorController } = props;
+  const { editorController } = props
   const {
     actions,
-    selectedHtmlElementStyleAttributes: elementStyles,
-    selectedHtmlElement,
-  } = editorController;
-  const { changeCurrentHtmlElementStyleAttribute } = actions.htmlElement;
+    selectedHtmlElementStyleAttributes2: elementStyles,
+    selectedHtmlElement2: selectedHtmlElement,
+  } = editorController
+  const { changeCurrentHtmlElementStyleAttribute } = actions.htmlElement
 
-  const theme = useTheme();
+  const theme = useTheme()
 
   const handleChangeStyleProp: { [key: string]: (newValue: string) => void } =
     useMemo(() => {
@@ -60,43 +61,43 @@ export const RightMenuLayoutTab = (props: RightMenuLayoutTabProps) => {
                     newValue,
                     (elementStyles as any)[propName]
                   )
-                : newValue;
-            changeCurrentHtmlElementStyleAttribute(valueAdj, propName);
+                : newValue
+            changeCurrentHtmlElementStyleAttribute(valueAdj, propName)
           },
-        };
-      }, {});
-      return handlers;
-    }, [changeCurrentHtmlElementStyleAttribute, elementStyles]);
+        }
+      }, {})
+      return handlers
+    }, [changeCurrentHtmlElementStyleAttribute, elementStyles])
 
   const handleChangeColumnGap = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
-      const newValue = e?.target?.value;
+      const newValue = e?.target?.value
       const secondValue =
-        elementStyles?.gap?.toString?.()?.split?.(" ")?.[1] || "0";
-      const firstValue = newValue?.replace(/\D/g, "");
-      const adjValue = firstValue + "px " + secondValue;
-      changeCurrentHtmlElementStyleAttribute(adjValue, "gap");
+        elementStyles?.gap?.toString?.()?.split?.(' ')?.[1] || '0'
+      const firstValue = newValue?.replace(/\D/g, '')
+      const adjValue = firstValue + 'px ' + secondValue
+      changeCurrentHtmlElementStyleAttribute(adjValue, 'gap')
     },
     [changeCurrentHtmlElementStyleAttribute, elementStyles?.gap]
-  );
+  )
   const handleChangeRowGap = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
-      const newValue = e?.target?.value;
+      const newValue = e?.target?.value
 
-      const secondValue = newValue?.replace(/\D/g, "");
+      const secondValue = newValue?.replace(/\D/g, '')
       const firstValue =
-        elementStyles?.gap?.toString?.()?.split?.(" ")?.[0] || "0";
-      const adjValue = firstValue + " " + secondValue + "px";
-      changeCurrentHtmlElementStyleAttribute(adjValue, "gap");
+        elementStyles?.gap?.toString?.()?.split?.(' ')?.[0] || '0'
+      const adjValue = firstValue + ' ' + secondValue + 'px'
+      changeCurrentHtmlElementStyleAttribute(adjValue, 'gap')
     },
     [changeCurrentHtmlElementStyleAttribute, elementStyles?.gap]
-  );
+  )
 
   return (
     <>
       <Stack
         gap={2}
-        borderLeft={"1px solid " + theme.palette.divider}
+        borderLeft={'1px solid ' + theme.palette.divider}
         // height="100%"
         p={1}
       >
@@ -110,7 +111,7 @@ export const RightMenuLayoutTab = (props: RightMenuLayoutTabProps) => {
             <Box display="flex" justifyContent="flex-end">
               <ButtonGroup
                 isSelected={isSelectedFns.display}
-                value={elementStyles.display ?? ""}
+                value={elementStyles.display ?? ''}
                 buttons={displayButtons}
                 onChange={handleChangeStyleProp.display}
                 transformValue={transformers.display}
@@ -118,14 +119,14 @@ export const RightMenuLayoutTab = (props: RightMenuLayoutTabProps) => {
             </Box>
 
             {/* Flexbox/Grid styles */}
-            {((elementStyles?.display ?? "").includes("flex") ||
-              (elementStyles?.display ?? "").includes("grid")) && (
+            {((elementStyles?.display ?? '').includes('flex') ||
+              (elementStyles?.display ?? '').includes('grid')) && (
               <>
                 {/* Direction */}
                 <Box>Direction</Box>
                 <Box display="flex" justifyContent="flex-end">
                   <ButtonGroup
-                    value={elementStyles.flexDirection ?? ""}
+                    value={elementStyles.flexDirection ?? ''}
                     buttons={directionButtons}
                     onChange={handleChangeStyleProp.flexDirection}
                     transformValue={transformers.flexDirection}
@@ -137,7 +138,7 @@ export const RightMenuLayoutTab = (props: RightMenuLayoutTabProps) => {
                 <Box>Align</Box>
                 <Box display="flex" justifyContent="flex-end">
                   <ButtonGroup
-                    value={elementStyles.alignItems ?? ""}
+                    value={elementStyles.alignItems ?? ''}
                     buttons={alignButtons}
                     onChange={handleChangeStyleProp.alignItems}
                   />
@@ -147,7 +148,7 @@ export const RightMenuLayoutTab = (props: RightMenuLayoutTabProps) => {
                 <Box>Justify</Box>
                 <Box display="flex" justifyContent="flex-end">
                   <ButtonGroup
-                    value={elementStyles.justifyContent ?? ""}
+                    value={elementStyles.justifyContent ?? ''}
                     buttons={justifyButtons}
                     onChange={handleChangeStyleProp.justifyContent}
                   />
@@ -155,8 +156,8 @@ export const RightMenuLayoutTab = (props: RightMenuLayoutTabProps) => {
 
                 {/* Gap */}
                 <Box>Gap</Box>
-                <Box display="flex" justifyContent="flex-end">
-                  <Stack direction="row" gap={0.25} width="max-content">
+                <Flex justifyContent="flex-end">
+                  <Flex gap={0.25} width="max-content">
                     <Box width={100}>
                       <TextField
                         size="small"
@@ -165,8 +166,8 @@ export const RightMenuLayoutTab = (props: RightMenuLayoutTabProps) => {
                         value={
                           elementStyles?.gap
                             ?.toString?.()
-                            ?.split?.(" ")?.[0]
-                            ?.replace(/\D/g, "") ?? ""
+                            ?.split?.(' ')?.[0]
+                            ?.replace(/\D/g, '') ?? ''
                         }
                       />
                     </Box>
@@ -178,13 +179,13 @@ export const RightMenuLayoutTab = (props: RightMenuLayoutTabProps) => {
                         value={
                           elementStyles?.gap
                             ?.toString?.()
-                            ?.split?.(" ")?.[1]
-                            ?.replace(/\D/g, "") ?? ""
+                            ?.split?.(' ')?.[1]
+                            ?.replace(/\D/g, '') ?? ''
                         }
                       />
                     </Box>
-                  </Stack>
-                </Box>
+                  </Flex>
+                </Flex>
               </>
             )}
 
@@ -192,7 +193,7 @@ export const RightMenuLayoutTab = (props: RightMenuLayoutTabProps) => {
             <Box>Position</Box>
             <Box display="flex" justifyContent="flex-end">
               <ButtonGroup
-                value={elementStyles.position ?? ""}
+                value={elementStyles.position ?? ''}
                 buttons={positionButtons}
                 onChange={handleChangeStyleProp.position}
               />
@@ -209,7 +210,7 @@ export const RightMenuLayoutTab = (props: RightMenuLayoutTabProps) => {
       </Stack>
 
       {/* Size */}
-      <Stack gap={2} borderLeft={"1px solid " + theme.palette.divider} p={1}>
+      <Stack gap={2} borderLeft={'1px solid ' + theme.palette.divider} p={1}>
         <Typography fontWeight={700} color="text.primary">
           Size
         </Typography>
@@ -218,27 +219,31 @@ export const RightMenuLayoutTab = (props: RightMenuLayoutTabProps) => {
             {/* width */}
             <Box>Width</Box>
             <CssSizeSelector
-              attributeName="width"
-              editorController={editorController}
+              sizeValue={elementStyles.width as string}
+              changeSizeValue={handleChangeStyleProp.width}
+              // attributeName="width"
+              // editorController={editorController}
               defaultSizeMode={getSizeMode(
                 (selectedHtmlElement as any)?.attributes?.style?.width,
-                "auto"
+                'auto'
               )}
             />
 
             {/* height */}
             <Box>Height</Box>
             <CssSizeSelector
-              attributeName="height"
-              editorController={editorController}
+              // attributeName="height"
+              // editorController={editorController}
+              sizeValue={elementStyles.height as string}
+              changeSizeValue={handleChangeStyleProp.height}
               defaultSizeMode={getSizeMode(
                 (selectedHtmlElement as any)?.attributes?.style?.height,
-                "auto"
+                'auto'
               )}
             />
           </CGrid>
         </Box>
       </Stack>
     </>
-  );
-};
+  )
+}

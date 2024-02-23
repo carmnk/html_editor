@@ -1,6 +1,6 @@
 import { Box, TextField, useTheme } from "@mui/material";
 import { CSSProperties, ChangeEvent, useMemo } from "react";
-import { EditorControllerType } from "../../../editorController/editorController";
+import { EditorControllerType } from "../../../editorController/editorControllerTypes";
 
 export type StyleSpacingSelectorProps = {
   elementStyles: CSSProperties;
@@ -138,7 +138,7 @@ export const StyleSpacingSelector = (props: StyleSpacingSelectorProps) => {
             border={"1px solid " + theme.palette.text.primary}
           ></Box>
           <Box
-            width={squareSize - 2} // -2 to account for border?
+            width={squareSize } // -2 to account for border?
             textAlign="center"
             borderRight={"1px solid " + theme.palette.text.primary}
           >

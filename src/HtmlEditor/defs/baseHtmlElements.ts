@@ -1,6 +1,7 @@
-import { HtmlEditorElementType } from "../EditorState";
+import { ElementType } from '../editorController/editorState'
+import { v4 as uuid } from 'uuid'
 
-export const baseHtmlDocument: HtmlEditorElementType[] = [
+export const baseHtmlDocument: ElementType[] = [
   // {
   //   id: "html_root",
   //   type: "html",
@@ -22,16 +23,19 @@ export const baseHtmlDocument: HtmlEditorElementType[] = [
   //       }
   //     },
   {
-    id: "app_root",
-    type: "div",
+    _id: uuid(),
+    _type: 'div',
     _disableDelete: true,
-    children: [],
+    _page: 'index',
+    _parentId: null,
+    _userID: '',
+
     attributes: {
       style: {
-        height: "100%",
+        height: '100%',
       },
     },
   },
   //   ],
   // },
-];
+]

@@ -1,125 +1,149 @@
-import { Theme } from "@mui/material";
-import { CSSProperties, ChangeEvent } from "react";
+import { Theme } from '@mui/material'
+import { CSSProperties, ChangeEvent } from 'react'
 import {
   EditorStateType,
-  HtmlEditorComponentElementTypes,
-  HtmlEditorElementType,
-} from "../EditorState";
+  ComponentElementTypes,
+  ElementType,
+} from './editorState'
+import { UI_POINTER_MODE } from '../defs/uiPointerMode'
 
 export type EditorControllerType = {
-  editorState: EditorStateType;
-  appState: EditorControllerAppStateReturnType;
-  setEditorState: React.Dispatch<React.SetStateAction<EditorStateType>>;
-  getSelectedCssClass: (className?: string) => CSSProperties;
+  editorState: EditorStateType
+  appState: EditorControllerAppStateReturnType
+  setEditorState: React.Dispatch<React.SetStateAction<EditorStateType>>
+
+  // getSelectedCssClass: (className?: string) => CSSProperties;
   getSelectedImage: (imageId?: string) => {
-    image: typeof Image;
-    fileName: string;
-    src: string;
-    imageSrcId: string;
-  } | null;
-  selectedHtmlElement: HtmlEditorElementType | null;
-  selectedPageHtmlElements: HtmlEditorElementType[];
-  selectedHtmlElementStyleAttributes: React.CSSProperties;
+    image: typeof Image
+    fileName: string
+    src: string
+    imageSrcId: string
+  } | null
+  //
+  selectedHtmlElement2: ElementType | null
+  selectedPageHtmlElements2: ElementType[]
+  selectedHtmlElementStyleAttributes2: React.CSSProperties
+
   actions: {
     project: {
-      saveProject: () => void;
-      handleLoadProject: (e: ChangeEvent<HTMLInputElement>) => void;
-      addHtmlPage: () => void;
-      removeHtmlPage: (pageName: string) => void;
-    };
-    htmlElement: EditorControllerHtmlElementActionsType;
-    cssSelector: EditorControllerCssSelectorActionsType;
+      saveProject: () => void
+      loadProject: (e: ChangeEvent<HTMLInputElement>) => void
+      addHtmlPage: () => void
+      removeHtmlPage: (pageName: string) => void
+      duplicateHtmlPage: (pageName: string) => void
+      renameHtmlPage: (oldPageName: string, newPageName: string) => void
+      handleChangeDefaultTheme: (themeName: string) => void
+    }
     assets: {
-      handleProvidedImageFile: (files: File[]) => void;
-      handleDeleteImageFile: (imageId: string) => void;
-      handleChangeImageFilename: (newFileName: string) => void;
-    };
-    ui: {
-      handleChangeThemePaletteColor: (params: {
-        themeName: string;
-        colorKey: keyof Theme["palette"];
-        subKey?: string;
-        newValue: string;
-      }) => void;
-      toggleEditorTheme: (currentThemeName: string) => void;
-      handleSelectHtmlPage: (newValue: string) => void;
-      handleSelectHtmlElement: (newValue: string) => void;
-      handleSelectCssClass: (newValue: string) => void;
-      handleSelectImage: (newValue: string) => void;
-      navigationMenu: {
-        handleSwitchNavigationTab: (newValue: string) => void;
-        toggleElementAddComponentMode: (nodeId: string | null) => void;
-        handleExpandHtmlElementTreeItem: (newValue: string) => void;
-        handleSelectTheme: (newValue: string) => void;
-      };
-      detailsMenu: {
-        handleSelectHtmlElementCssPropertiesListFilter: (
-          newValue: string
-        ) => void;
-        handleChangeHtmlElementStyleTab: (newValue: string) => void;
-      };
-    };
-  };
-};
+      handleProvidedImageFile: (files: File[]) => void
+      deleteImageFile: (imageId: string) => void
+      changeImageFilename: (newFileName: string) => void
+    }
+    themes: EditorControllerThemesActionsType
+    htmlElement: EditorControllerHtmlElementActionsType
+    cssSelector: EditorControllerCssSelectorActionsType
+    ui: EditorControllerUiActionsType
+  }
+}
 
-export type EditorControllerAppStateType = { [key: string]: any };
+export type EditorControllerAppStateType = { [key: string]: any }
 export type EditorControllerAppStateReturnType = {
-  state: EditorControllerAppStateType;
+  state: EditorControllerAppStateType
   // values: { [key: string]: string[] };
   actions: {
-    addProperty: (key: string, value: any) => void;
-    removeProperty: (key: string) => void;
-    updateProperty: (key: string, value: any) => void;
-  };
+    addProperty: (key: string, value: any) => void
+    removeProperty: (key: string) => void
+    updateProperty: (key: string, value: any) => void
+  }
   // setStateValues: Dispatch<SetStateAction<{ [key: string]: string[] }>>;
-};
+}
 
 export type EditorControllerCssSelectorActionsType = {
-  removeRule: (ruleName: string) => void;
-  addNewRule: () => void;
-  toggleEditRule: (ruleName: keyof CSSProperties) => void;
-  handleChangeEditRuleValue: (newValue: string) => void;
-  handleChangeClassName: (newClassName: string) => void;
-  handleChangeAddClassRuleName: (newValue: string) => void;
-  handleChangeAddClassRuleValue: (newValue: string) => void;
-  handleDeleteCssSelector: (name: string) => void;
-  handleAddCssSelector: (newVal: string | number) => void;
-};
+  removeRule: (ruleName: string) => void
+  addNewRule: () => void
+  toggleEditRule: (ruleName: keyof CSSProperties) => void
+  changeEditRuleValue: (newValue: string) => void
+  changeClassName: (newClassName: string, currentId: string) => void
+  changeAddClassRuleName: (newValue: string) => void
+  changeAddClassRuleValue: (newValue: string) => void
+  deleteCssSelector: (name: string) => void
+  addCssSelector: (newVal: string) => void
+}
 
 export type EditorControllerHtmlElementActionsType = {
-  handleDeleteHtmlElement: (newValue: string | number) => void;
-  handleAddHtmlChild: (newValue: string, newElementType?: string) => void;
-  handleToggleHtmlElementEditCssRule: (attributeName: string) => void;
+  deleteElement: (newValue: string | number) => void
+  addHtmlChild: (newValue: string, newElementType?: string) => void
+  toggleHtmlElementEditCssRule: (attributeName: string) => void
   changeHtmlElementEditedCssRuleValue: (
     newValue: string,
     activeEditRule: string
-  ) => void;
+  ) => void
   changeCurrentHtmlElement: (
-    newHtmlElement:
-      | HtmlEditorElementType
-      | ((current: HtmlEditorElementType) => HtmlEditorElementType)
-  ) => void;
+    newHtmlElement: ElementType | ((current: ElementType) => ElementType)
+  ) => void
   changeCurrentHtmlElementStyleAttribute: (
     ruleName: string,
     ruleValue: string
-  ) => void;
+  ) => void
   changeCurrentHtmlElementAttribute: (
     attributeName: string,
     attributeValue: string
-  ) => void;
-  changeCurrentHtmlElementProp: (
-    propName: "id" | "type" | "content" | "imageSrcId",
+  ) => void
+  changeCurrentElementProp: (
+    propName: keyof ElementType,
     propValue: string
-  ) => void;
-  handleRemoveCurrentHtmlElementStyleAttribute: (ruleName: string) => void;
-  handleAddComponentChild: (
-    newValue: string,
-    type: HtmlEditorComponentElementTypes
-  ) => void;
-  handleChangeComponentProp: (key: string, value: any) => void;
-  handleSwapHtmlElements: (elementId: string, targetElementId: string) => void;
-  handleInsertElementIntoElement: (
+  ) => void
+  changeElementProp: (
     elementId: string,
-    targetElementId: string
-  ) => void;
-};
+    propName: keyof ElementType,
+    propValue: string
+  ) => void
+  removeCurrentHtmlElementStyleAttribute: (ruleName: string) => void
+  addComponentChild: (newValue: string, type: ComponentElementTypes) => void
+  changeSelectedComponentProp: (key: string, value: any) => void
+  changeComponentProp: (componentId: string, key: string, value: any) => void
+  swapHtmlElements: (elementId: string, targetElementId: string) => void
+  insertElementIntoElement: (elementId: string, targetElementId: string) => void
+}
+
+export type EditorControllerThemesActionsType = {
+  changeThemePaletteColor: (params: {
+    themeName: string
+    colorKey: keyof Theme['palette']
+    subKey?: string
+    newValue: string
+  }) => void
+  changeTypographyStyle: (params: {
+    variantKey: keyof Theme['typography']
+    //   styleKey: keyof Theme['typography']['caption']
+    newVariantStyles: any
+  }) => void
+}
+
+export type EditorControllerUiActionsType = {
+  togglePreviewMode: () => void
+  changePointerMode: (newValue: UI_POINTER_MODE) => void
+  selectStateComponent: (newValue: string) => void
+  selectFont: (fontFamily: string) => void
+  // changeThemePaletteColor: (params: {
+  //   themeName: string
+  //   colorKey: keyof Theme['palette']
+  //   subKey?: string
+  //   newValue: string
+  // }) => void
+  toggleEditorTheme: (currentThemeName: string) => void
+  selectHtmlPage: (newValue: string) => void
+  selectElement: (newValue: string) => void
+  selectCssClass: (newValue: string) => void
+  selectImage: (newValue: string) => void
+  navigationMenu: {
+    switchNavigationTab: (newValue: string) => void
+    toggleElementAddComponentMode: (nodeId: string | null) => void
+    expandHtmlElementTreeItem: (newValue: string) => void
+    selectTheme: (newValue: string) => void
+  }
+  detailsMenu: {
+    selectHtmlElementCssPropertiesListFilter: (newValue: string) => void
+    changeHtmlElementStyleTab: (newValue: string) => void
+  }
+}

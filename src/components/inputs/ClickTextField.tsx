@@ -7,9 +7,10 @@ import {
   TypographyProps,
   TextField,
   TextFieldProps,
+  Chip,
 } from "@mui/material";
 import { ChangeEvent, memo, useCallback, useState } from "react";
-import { Button } from "../buttons/Button";
+import { Button } from "../buttons/Button/Button";
 import { CAutoComplete, CAutoCompleteProps } from "./CAutoComplete";
 
 const inputStyles = { sx: { p: 0.5, px: 1 } };
@@ -25,6 +26,9 @@ type CommonClickTextFieldProps = {
   handleRemoveItem?: () => void;
   onToggle?: (isEdit: boolean) => void;
   disabled?: boolean;
+  placeholder?: string;
+  groupBy?: (option: any) => string;
+  useChip?: boolean;
 };
 
 type TextClickTextFieldProps = {
@@ -55,6 +59,9 @@ export const ClickTextFieldComponent = (props: ClickTextFieldProps) => {
     handleRemoveItem,
     onToggle,
     disabled,
+    placeholder,
+    useChip,
+    groupBy,
   } = props as TextClickTextFieldProps &
     AutoCompleteClickTextFieldProps &
     CommonClickTextFieldProps;
@@ -95,20 +102,34 @@ export const ClickTextFieldComponent = (props: ClickTextFieldProps) => {
     [validateInput]
   );
 
+  const handleOnKeyUp = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === "Enter") {
+        handleTakeover();
+      }
+    },
+    [handleTakeover]
+  );
+
   return !ui?.isEdit || disabled ? (
-    <Stack direction="row" maxWidth={248} alignItems="center" gap={1}>
-      <Typography
-        fontWeight={700}
-        color="text.primary"
-        // variant="h6"
-        textOverflow="ellipsis"
-        overflow="hidden"
-        whiteSpace="nowrap"
-        variant="h5"
-        {...typographyProps}
-      >
-        {value ?? ""}
-      </Typography>
+    <Stack direction="row" alignItems="center" gap={1}>
+      {useChip ? (
+        <Chip label={(value || placeholder) ?? ""} size="small" />
+      ) : (
+        <Typography
+          color="text.primary"
+          // variant="h6"
+          textOverflow="ellipsis"
+          overflow="hidden"
+          whiteSpace="nowrap"
+          variant="h5"
+          fontStyle={!value && placeholder ? "italic" : "normal"}
+          fontWeight={!value && placeholder ? 400 : 700}
+          {...typographyProps}
+        >
+          {(value || placeholder) ?? ""}
+        </Typography>
+      )}
       {additionalLabelComponent}
       {!disabled && (
         <>
@@ -140,6 +161,7 @@ export const ClickTextFieldComponent = (props: ClickTextFieldProps) => {
           {variant === "autocomplete" ? (
             <CAutoComplete
               value={(ui?.tempValue as any) ?? ""}
+              placeholder={placeholder}
               name="editRuleValue"
               options={options}
               // value={ui.ruleValue}
@@ -148,14 +170,18 @@ export const ClickTextFieldComponent = (props: ClickTextFieldProps) => {
               sx={{ width: "140px" }}
               disableLabel={true}
               disableHelperText={true}
+              onKeyUp={handleOnKeyUp}
+              groupBy={groupBy}
               {...(textFieldProps as any)}
             />
           ) : (
             <TextField
+              placeholder={placeholder}
               size="small"
               inputProps={inputStyles}
               onChange={handleChangeTempValue}
               value={ui?.tempValue ?? ""}
+              onKeyUp={handleOnKeyUp as any}
               {...textFieldProps}
             />
           )}

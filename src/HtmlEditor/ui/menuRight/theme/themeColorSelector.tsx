@@ -1,21 +1,19 @@
-import { Box, Typography } from "@mui/material";
-import { CGrid } from "../../../../components/basics/CGrid";
-import { ColorPicker } from "../../../../components/color/ColorPicker";
-import { useCallback } from "react";
+import { Box, Typography } from '@mui/material'
+import { CGrid } from '../../../../components/basics/CGrid'
+import { ColorPicker } from '../../../../components/color/ColorPicker'
+import { useCallback } from 'react'
 
 export type ThemeColorSelectorProps = {
-  colorName: string;
-  light: string;
-  main: string;
-  dark: string;
-  contrastText: string;
-  onChange: (newValue: string, variant: "light" | "main" | "dark") => void;
-};
+  colorName: string
+  light: string
+  main: string
+  dark: string
+  contrastText: string
+  onChange: (newValue: string, variant: 'light' | 'main' | 'dark') => void
+}
 
 export const ThemeColorSelector = (props: ThemeColorSelectorProps) => {
-  const { colorName, light, main, dark, contrastText, onChange } = props;
-
-  // if (colorName === "primary") console.log("THEME COLOR SELECTOR", props);
+  const { colorName, light, main, dark, contrastText, onChange } = props
 
   // const handleChangeLight = useCallback(
   //   (newValue: string) => {
@@ -25,10 +23,10 @@ export const ThemeColorSelector = (props: ThemeColorSelectorProps) => {
   // );
   const handleChangeMain = useCallback(
     (newValue: string) => {
-      onChange(newValue, "main");
+      onChange(newValue, 'main')
     },
     [onChange]
-  );
+  )
   // const handleChangeDark = useCallback(
   //   (newValue: string) => {
   //     onChange(newValue, "dark");
@@ -36,14 +34,14 @@ export const ThemeColorSelector = (props: ThemeColorSelectorProps) => {
   //   [onChange]
   // );
 
-  const disabledSelectorSize = 21;
+  const disabledSelectorSize = 21
   return (
     <Box position="relative">
       <CGrid
         gridTemplateColumns="auto 80px 28px"
         alignItems="center"
         position="relative"
-        gap={"8px 0"}
+        gap={'8px 0'}
       >
         <Box>{colorName}</Box>
         <Typography
@@ -62,11 +60,11 @@ export const ThemeColorSelector = (props: ThemeColorSelectorProps) => {
         </Box>
         <Box />
         <Typography variant="body2">main</Typography>
-        <ColorPicker value={main} onChange={handleChangeMain}/>
+        <ColorPicker value={main} onChange={handleChangeMain} />
         <Box />
         <Typography variant="body2" color="action.disabled">
           dark
-        </Typography>{" "}
+        </Typography>{' '}
         <Box display="flex" justifyContent="center" alignItems="center">
           <ColorPicker
             value={dark}
@@ -87,5 +85,5 @@ export const ThemeColorSelector = (props: ThemeColorSelectorProps) => {
         </Box>
       </CGrid>
     </Box>
-  );
-};
+  )
+}

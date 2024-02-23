@@ -1,195 +1,282 @@
-import { Stack, Typography, Box, useTheme, Chip } from "@mui/material";
-import { CSelect } from "../../../../components/inputs/CSelect";
-import { CTabs } from "../../../../components/navigation/CTabs";
-import { RightMenuContentTab } from "./ContentTab";
-import { RightMenuLayoutTab } from "./LayoutTab";
-import { RightMenuShapeTab } from "./ShapeTab";
-import { RightMenuTypographyTab } from "./TypographyTab";
-import React, { useEffect, useMemo } from "react";
-import { HTML_TAG_NAMES_BASIC_OPTIONS } from "../../../defs/HTMLTagNamesDict";
-import { CAutoComplete } from "../../../../components/inputs/CAutoComplete";
-import { EditorControllerType } from "../../../editorController/editorController";
-import { RightMenuCssRuleTab } from "./CssRulesTab";
-import CTextField from "../../../../components/inputs/CTextField";
-import { makeHtmlElementMenuTabs } from "./_defHtmlElementMenuTabs";
-import { ClickTextField } from "../../../../components/inputs/ClickTextField";
-import { HtmlEditorElementType } from "../../../EditorState";
+import {
+  Stack,
+  Typography,
+  Box,
+  useTheme,
+  Chip,
+  Switch,
+  FormControlLabel,
+} from '@mui/material'
+import { CSelect } from '../../../../components/inputs/CSelect'
+import { CTabs } from '../../../../components/navigation/CTabs'
+import { RightMenuContentTab } from './ContentTab'
+import { RightMenuLayoutTab } from './LayoutTab'
+import { RightMenuShapeTab } from './ShapeTab'
+import { RightMenuTypographyTab } from './TypographyTab'
+import React, { useCallback, useEffect, useMemo } from 'react'
+import {
+  HTML_TAG_NAMES_BASIC_OPTIONS,
+  HTML_TAG_NAMES_STRUCTURED_OPTIONS,
+} from '../../../defs/HTMLTagNamesDict'
+import { CAutoComplete } from '../../../../components/inputs/CAutoComplete'
+import { RightMenuCssRuleTab } from './CssRulesTab'
+import CTextField from '../../../../components/inputs/CTextField'
+import { makeHtmlElementMenuTabs } from './_defHtmlElementMenuTabs'
+import { ClickTextField } from '../../../../components/inputs/ClickTextField'
+import { EditorControllerType } from '../../../editorController/editorControllerTypes'
+import { ElementType } from '../../../editorController/editorState'
+import { groupByCategory } from '../../LeftNavigationMenu/AddElementModal'
+import { CommonDetailsHeader } from '../CommonHeader'
+import { Flex } from '../../../../components/basics/Flex'
+import { uniq } from 'lodash'
 
 export type HtmlElementMenuProps = {
-  editorController: EditorControllerType;
-};
+  editorController: EditorControllerType
+  selectedComponent?: ElementType<'Button'>
+}
 
-const autoCompleteWidthStyle = { width: 220 };
+const autoCompleteWidthStyle = { width: 220 }
 
 const filteredHtmlElementOptions = HTML_TAG_NAMES_BASIC_OPTIONS.filter(
-  (opt) => !["html", "head", "body"].includes(opt.value)
-);
+  (opt) => !['html', 'head', 'body'].includes(opt.value)
+)
 
 export const HtmlElementMenu = (props: HtmlElementMenuProps) => {
-  const { editorController } = props;
-  const { editorState, getSelectedImage, actions, selectedHtmlElement } =
-    editorController;
+  const { editorController, selectedComponent } = props
+  const {
+    editorState,
+    getSelectedImage,
+    actions,
+    selectedHtmlElement2: selectedHtmlElement,
+  } = editorController
+  const selectedElementAdj = selectedComponent ?? selectedHtmlElement
   const {
     changeCurrentHtmlElement,
     changeCurrentHtmlElementAttribute,
-    changeCurrentHtmlElementProp,
-  } = actions.htmlElement;
-  const { handleChangeHtmlElementStyleTab } = actions.ui.detailsMenu;
+    changeCurrentElementProp,
+  } = actions.htmlElement
+  const { changeHtmlElementStyleTab } = actions.ui.detailsMenu
 
   const selectedHtmlElementStyleIntersection =
-    selectedHtmlElement as HtmlEditorElementType<"img">;
+    selectedElementAdj as ElementType<'img'>
 
-  const theme = useTheme();
+  const theme = useTheme()
+  const [ui, setUi] = React.useState({
+    internalHref: true,
+  })
 
-  const isOverheadHtmlElement = ["html", "head", "body"].includes(
-    selectedHtmlElement?.type ?? ""
-  );
+  useEffect(() => {
+    setUi((prev) => ({
+      ...prev,
+      internalHref:
+        selectedHtmlElementStyleIntersection?.attributes?.href?.startsWith?.(
+          '/'
+        ) ?? true,
+    }))
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedHtmlElementStyleIntersection?._id])
+
+  const pageOptions = useMemo(() => {
+    const pages = uniq(editorState?.elements?.map((el) => el._page) ?? [])
+    return pages.map((page) => ({
+      value: '/' + page,
+      label: page,
+    }))
+  }, [editorState?.elements])
+
+  const handleSwitchInternalHrefChange = useCallback(() => {
+    const href = selectedHtmlElementStyleIntersection?.attributes?.href
+    const pageOption = pageOptions.find((opt) => opt.value === href)
+    // can only toggle back when value in field is among pageOptions
+    if (!ui?.internalHref && !pageOption) {
+      changeCurrentHtmlElementAttribute('href', '')
+    }
+    setUi((prev) => ({ ...prev, internalHref: !prev.internalHref }))
+  }, [
+    selectedHtmlElementStyleIntersection,
+    changeCurrentHtmlElementAttribute,
+    ui,
+    pageOptions,
+  ])
+
+  const isOverheadHtmlElement = ['html', 'head', 'body'].includes(
+    selectedElementAdj?._type ?? ''
+  )
 
   const menuTabs = React.useMemo(() => {
-    if (!selectedHtmlElement) return [];
-    return makeHtmlElementMenuTabs({ theme, selectedHtmlElement });
-  }, [theme, selectedHtmlElement]);
+    if (!selectedElementAdj) return []
+    return makeHtmlElementMenuTabs({
+      theme,
+      selectedHtmlElement: selectedElementAdj,
+      elements: editorState?.elements,
+    })
+  }, [theme, selectedElementAdj, editorState?.elements])
 
   const trimmedClassName = (
-    selectedHtmlElement as any
-  )?.attributes?.className?.trim();
+    selectedElementAdj as any
+  )?.attributes?.className?.trim()
   const classNames: string[] | null = useMemo(
-    () => (trimmedClassName ? trimmedClassName?.split?.(" ") || null : null),
-    [trimmedClassName]
-  );
+    () =>
+      trimmedClassName
+        ? trimmedClassName
+            ?.split?.(' ')
+            ?.map(
+              (id: any) =>
+                editorState.cssSelectors.find((sel) => sel._id === id.trim())
+                  ?._userId
+            ) || null
+        : null,
+    [trimmedClassName, editorState.cssSelectors]
+  )
+
   const classNameOptions = useMemo(
     () =>
-      Object.keys(editorState?.cssWorkspaces?.common ?? {})
-        ?.map?.((opt) => ({
-          value: opt,
-          label: opt,
+      editorState.cssSelectors
+        ?.map?.((sel) => ({
+          value: sel._id,
+          label: sel._userId,
         }))
         ?.filter((opt) => !classNames?.includes(opt.value)),
-    [classNames, editorState?.cssWorkspaces?.common]
-  );
+    [classNames, editorState?.cssSelectors]
+  )
   const imageSrcOptions = React.useMemo(() => {
-    const commonWorkspace = editorState?.imageWorkspaces?.common;
-    return Object.keys(commonWorkspace)?.map((value) => ({
-      value,
-      label: commonWorkspace[value]?.fileName ?? "",
-      src: commonWorkspace[value]?.src,
-    }));
-  }, [editorState?.imageWorkspaces?.common]);
+    return editorState.assets.images?.map((image) => ({
+      value: image._id,
+      label: image?.fileName ?? '',
+      src: image?.src,
+    }))
+  }, [editorState?.assets?.images])
 
   // HANDLERS
   const handleChangeElementType = React.useCallback(
     (newValue: string) => {
-      const propName = "type";
-      changeCurrentHtmlElementProp(propName, newValue);
+      const propName = '_type'
+      changeCurrentElementProp(propName, newValue)
     },
-    [changeCurrentHtmlElementProp]
-  );
+    [changeCurrentElementProp]
+  )
 
   const handleChangeElementId = React.useCallback(
     (value: string) => {
-      const propName = "id";
-      changeCurrentHtmlElementAttribute(propName, value);
+      const propName = 'id'
+      changeCurrentHtmlElementAttribute(propName, value)
     },
     [changeCurrentHtmlElementAttribute]
-  );
+  )
 
   const handleChangeElementClasses = React.useCallback(
     (attributeValue: string) => {
-      const attributeName = "className";
-      changeCurrentHtmlElementAttribute(attributeName, attributeValue);
+      const attributeName = 'className'
+      changeCurrentHtmlElementAttribute(attributeName, attributeValue)
     },
     [changeCurrentHtmlElementAttribute]
-  );
+  )
 
   const handleAddClass = React.useCallback(
     (newValue: string) => {
-      const classToAdd = newValue?.trim() ?? "";
-      if (!classToAdd) return;
+      const classToAdd = newValue?.trim() ?? ''
+      if (!classToAdd) return
 
       const newClassNames = classNames?.length
-        ? classNames?.join(" ") + " " + classToAdd
-        : "" + classToAdd;
-      handleChangeElementClasses(newClassNames);
+        ? classNames
+            ?.map((classId) =>
+              editorState.cssSelectors.find((sel) => sel._id === classId)
+            )
+            ?.filter((val) => val)
+            ?.join(' ') +
+          ' ' +
+          classToAdd
+        : '' + classToAdd
+
+      handleChangeElementClasses(newClassNames)
     },
-    [classNames, handleChangeElementClasses]
-  );
+    [classNames, handleChangeElementClasses, editorState.cssSelectors]
+  )
 
   const handleRemoveClass = React.useCallback(
     (classname: string) => {
-      const newClassNames = classNames?.filter((cn) => cn !== classname);
-      const newClassName = newClassNames?.join(" ") ?? "";
-      handleChangeElementClasses(newClassName);
+      const newClassNames = classNames?.filter((cn) => cn !== classname)
+      const newClassName = newClassNames?.join(' ') ?? ''
+      handleChangeElementClasses(newClassName)
     },
     [classNames, handleChangeElementClasses]
-  );
+  )
 
   const handleChangeImageSource = React.useCallback(
     (newValue: string) => {
       const { imageSrcId, ...selectedImage } =
-        getSelectedImage?.(newValue) ?? {};
-      if (!("src" in selectedImage) || !imageSrcId) return;
-      const src = selectedImage?.src;
+        getSelectedImage?.(newValue) ?? {}
+      if (!('src' in selectedImage) || !imageSrcId) return
+      const src = selectedImage?.src
       changeCurrentHtmlElement((current) => {
         const currentAttributes =
-          "attributes" in current ? current.attributes : {};
+          'attributes' in current ? current.attributes : {}
         return {
           ...current,
           imageSrcId,
           attributes: { ...currentAttributes, src } as any,
-        };
-      });
+        }
+      })
     },
     [getSelectedImage, changeCurrentHtmlElement]
-  );
+  )
 
   const handleChangeLinkHref = React.useCallback(
     (newValue: string | number) => {
-      const attributeValue = newValue.toString(); // e?.target?.value;
-      const attributeName = "href";
-      changeCurrentHtmlElementAttribute(attributeName, attributeValue);
+      const attributeValue = newValue.toString() // e?.target?.value;
+      const attributeName = 'href'
+      changeCurrentHtmlElementAttribute(attributeName, attributeValue)
     },
     [changeCurrentHtmlElementAttribute]
-  );
+  )
 
   // EFFECTS
   // switch tab if children have been added
   const activeStylesTab =
-    editorState?.ui?.detailsMenu?.htmlElement?.activeStylesTab;
+    editorState?.ui?.detailsMenu?.htmlElement?.activeStylesTab
   useEffect(() => {
     if (
-      selectedHtmlElement?.children?.length &&
-      activeStylesTab === "content"
+      editorState?.elements?.find(
+        (el) => el._parentId === selectedElementAdj?._id
+      ) &&
+      // selectedElementAdj?.children?.length &&
+      activeStylesTab === 'content'
     ) {
-      handleChangeHtmlElementStyleTab("layout");
+      changeHtmlElementStyleTab('layout')
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedHtmlElement]);
+  }, [selectedElementAdj])
+
+  const handleChangeInternalHref = useCallback(
+    (newValue: string) => {
+      const newValueAdj = newValue
+      console.log('CHANGE HREF TO ', newValueAdj)
+      changeCurrentHtmlElementAttribute('href', newValueAdj)
+    },
+    [changeCurrentHtmlElementAttribute]
+  )
 
   return (
     <>
       <Stack
         gap={2}
-        borderLeft={"1px solid " + theme.palette.divider}
+        borderLeft={'1px solid ' + theme.palette.divider}
         // height="100%"
         p={1}
       >
-        <ClickTextField
-          value={(selectedHtmlElement as any)?.attributes?.id ?? "Set ID"}
-          onChange={handleChangeElementId}
+        <CommonDetailsHeader
+          idPlaceholder={`<${selectedElementAdj?._type}> Set ID`}
+          idValue={(selectedElementAdj as any)?.attributes?.id}
+          handleChangeElementId={handleChangeElementId}
+          typeLabel="HTML Element"
+          typePlaceholder="Set Type"
+          typeValue={selectedElementAdj?._type}
+          typeDisabled={isOverheadHtmlElement}
+          handleChangeElementType={handleChangeElementType}
         />
-        {isOverheadHtmlElement ? (
-          <Typography>type: {selectedHtmlElement?.type ?? ""}</Typography>
-        ) : (
-          <Box>
-            <CSelect
-              label="type"
-              value={selectedHtmlElement?.type ?? ""}
-              onChange={handleChangeElementType}
-              options={filteredHtmlElementOptions}
-            />
-          </Box>
-        )}
-        {selectedHtmlElement?.type === "img" && (
+
+        {selectedElementAdj?._type === 'img' && (
           <Box>
             <CAutoComplete
               label="src"
@@ -197,8 +284,8 @@ export const HtmlElementMenu = (props: HtmlElementMenuProps) => {
               options={imageSrcOptions}
               value={
                 imageSrcOptions?.find(
-                  (opt) => opt.src === selectedHtmlElement?.attributes?.src
-                )?.value ?? ""
+                  (opt) => opt.src === selectedElementAdj?.attributes?.src
+                )?.value ?? ''
               }
               onChange={handleChangeImageSource}
               freeSolo={false}
@@ -206,25 +293,48 @@ export const HtmlElementMenu = (props: HtmlElementMenuProps) => {
             />
           </Box>
         )}
-        {selectedHtmlElement?.type === "a" && (
-          <Box>
-            <CTextField
-              label="href"
-              name="a_href"
-              value={selectedHtmlElementStyleIntersection?.attributes?.href}
-              onChange={handleChangeLinkHref}
-            />
-          </Box>
+        {selectedElementAdj?._type === 'a' && (
+          <Flex justifyContent="space-between">
+            {ui?.internalHref ? (
+              <Box width={220}>
+                <CSelect
+                  fullWidth
+                  label="href"
+                  name="a_href"
+                  value={selectedHtmlElementStyleIntersection?.attributes?.href}
+                  options={pageOptions}
+                  onChange={handleChangeInternalHref}
+                />
+              </Box>
+            ) : (
+              <CTextField
+                label="href"
+                name="a_href"
+                value={selectedHtmlElementStyleIntersection?.attributes?.href}
+                onChange={handleChangeLinkHref}
+              />
+            )}
+            <Box>
+              <FormControlLabel
+                value="top"
+                control={
+                  <Switch
+                    color="primary"
+                    value={ui.internalHref}
+                    checked={ui.internalHref}
+                    onChange={handleSwitchInternalHrefChange}
+                  />
+                }
+                label="Internal"
+                componentsProps={{ typography: { variant: 'caption' } }}
+                labelPlacement="top"
+              />
+            </Box>
+          </Flex>
         )}
-        <Stack
-          direction="row"
-          alignItems="center"
-          gap={"0 16px"}
-          maxWidth={220}
-          flexWrap="wrap"
-        >
+        <Flex alignItems="center" gap={'0 16px'} flexWrap="wrap">
           <Typography>Classes</Typography>
-          <Stack direction="row" alignItems="center" gap={1} flexWrap="wrap">
+          <Flex alignItems="center" gap={1} flexWrap="wrap">
             {classNames?.map?.((className) => (
               <Chip
                 label={className}
@@ -234,34 +344,34 @@ export const HtmlElementMenu = (props: HtmlElementMenuProps) => {
             )) || <Chip label="No classes" color="default" size="small" />}
             <Box>
               <ClickTextField
-                value={""}
+                value={''}
                 onChange={handleAddClass}
                 variant="autocomplete"
                 options={classNameOptions}
               />
             </Box>
-          </Stack>
-        </Stack>
+          </Flex>
+        </Flex>
       </Stack>
 
       <CTabs
         value={activeStylesTab}
-        onChange={handleChangeHtmlElementStyleTab}
+        onChange={changeHtmlElementStyleTab}
         items={menuTabs}
       />
 
       {/* Layout */}
-      {activeStylesTab === "layout" ? (
+      {activeStylesTab === 'layout' ? (
         <RightMenuLayoutTab editorController={editorController} />
-      ) : activeStylesTab === "shape" ? (
+      ) : activeStylesTab === 'shape' ? (
         <RightMenuShapeTab editorController={editorController} />
-      ) : activeStylesTab === "typography" ? (
+      ) : activeStylesTab === 'typography' ? (
         <RightMenuTypographyTab editorController={editorController} />
-      ) : activeStylesTab === "content" ? (
+      ) : activeStylesTab === 'content' ? (
         <RightMenuContentTab editorController={editorController} />
-      ) : activeStylesTab === "css_rules" ? (
+      ) : activeStylesTab === 'css_rules' ? (
         <RightMenuCssRuleTab editorController={editorController} />
       ) : null}
     </>
-  );
-};
+  )
+}

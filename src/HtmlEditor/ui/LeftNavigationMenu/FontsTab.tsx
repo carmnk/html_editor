@@ -1,10 +1,17 @@
-import { mdiFileDocument, mdiPlus } from "@mdi/js";
+import {
+  mdiDevices,
+  mdiFileDocument,
+  mdiFormatText,
+  mdiPlus,
+  mdiWebCheck,
+} from "@mdi/js";
 import { Stack, Box, Typography } from "@mui/material";
-import { ButtonSmallIconButton } from "../../../components/buttons/ButtonSmallIconButton";
+import { ButtonSmallIconButton } from "../ButtonSmallIconButton";
 import { CTreeView } from "../../../components/treeview/CTreeView";
-import { EditorControllerType } from "../../editorController/editorController";
 import { useCallback, useMemo } from "react";
 import { StyledTreeItemProps } from "../../../components/treeview/CTreeItem";
+import { EditorControllerType } from "../../editorController/editorControllerTypes";
+import { SYSTEM_FONTS_NAMES } from "../../defs/CssFontFamilies";
 
 export type FontsTabProps = {
   editorController: EditorControllerType;
@@ -14,28 +21,32 @@ export const FontsTab = (props: FontsTabProps) => {
   const { editorController } = props;
   const { editorState, actions } = editorController;
 
-  const { handleSelectTheme } = actions.ui.navigationMenu;
-  const { toggleEditorTheme } = actions.ui;
+  const { selectFont } = actions.ui;
 
   const handleClickItem = useCallback(
-    (themeName: string) => {
-      alert("NOT YET IMPLEMENTED");
-      // handleSelectTheme(themeName);
-      // toggleEditorTheme(themeName);
+    (newValue: string) => {
+      selectFont(newValue);
     },
-    [handleSelectTheme, toggleEditorTheme]
+    [selectFont]
   );
 
   const fontsTreeItems = useMemo(() => {
     const treeItems: StyledTreeItemProps[] = editorState.fonts.map(
       (fontName: any) => {
+        const adjFontName = fontName
+          ?.split(",")?.[0]
+          ?.replaceAll("'", "")
+          ?.replaceAll('"', "");
         return {
           key: fontName,
           nodeId: fontName,
-          labelText: fontName,
+          labelText: adjFontName,
           disableAddAction: true,
           // disableDeleteAction: themeName === "index",
-          icon: mdiFileDocument,
+          icon: SYSTEM_FONTS_NAMES?.includes(adjFontName)
+            ? mdiWebCheck
+            : mdiFormatText,
+          _parentId: null,
         };
       }
     );
@@ -44,7 +55,7 @@ export const FontsTab = (props: FontsTabProps) => {
 
   return (
     <>
-      <Stack gap={2} height="100%" pr={2} width={320}>
+      <Stack gap={2} height="100%">
         <Box mt={0.5} ml={1}>
           <Stack
             direction="row"
@@ -56,7 +67,7 @@ export const FontsTab = (props: FontsTabProps) => {
             </Box>
 
             <ButtonSmallIconButton
-              tooltip="Add new Theme"
+              tooltip="Add new Font"
               icon={mdiPlus}
               //   onClick={addHtmlPage}
               disabled
@@ -69,9 +80,7 @@ export const FontsTab = (props: FontsTabProps) => {
             onToggleExpand={() => null}
             // maxWidth={220}
             onToggleSelect={handleClickItem}
-            selectedItems={
-              [editorState.ui?.navigationMenu?.selectedTheme ?? ""] ?? []
-            }
+            selectedItems={[editorState.ui.selected.font ?? ""] ?? []}
             disableItemsFocusable={true}
             // onDelete={removeHtmlPage}
           />

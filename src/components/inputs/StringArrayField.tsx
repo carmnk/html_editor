@@ -1,8 +1,9 @@
 import { mdiDeleteOutline } from "@mdi/js";
 import { Box, Stack } from "@mui/material";
 import React from "react";
-import { Button } from "../buttons/Button";
+import { Button } from "../buttons/Button/Button";
 import { CTextField } from "./CTextField";
+import { ButtonType } from "../buttons/Button/Types";
 
 export type StringArrayFieldProps = {
   value?: string[] | null;
@@ -84,7 +85,7 @@ export const StringArrayField = (props: StringArrayFieldProps) => {
               }}
             >
               <Button
-                type="text"
+                type={ButtonType.text}
                 iconButton={true}
                 icon={mdiDeleteOutline}
                 title={"delete_" + index}

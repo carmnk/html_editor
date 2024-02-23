@@ -1,6 +1,11 @@
 import { useState, useCallback, useRef } from "react";
 
-export const useElementHover = () => {
+export type UseElementHoverParams = {
+  disabled?: boolean;
+};
+
+export const useElementHover = (params: UseElementHoverParams) => {
+  const { disabled } = params ?? {};
   const [isHovering, setIsHovering] = useState(false);
 
   const handleMouseOver = useCallback((e: any) => {
@@ -16,6 +21,7 @@ export const useElementHover = () => {
 
   const callbackRef = useCallback(
     (node: any) => {
+      if (disabled) return;
       if (nodeRef.current) {
         nodeRef.current.removeEventListener("mouseover", handleMouseOver);
         nodeRef.current.removeEventListener("mouseout", handleMouseOut);
@@ -28,7 +34,7 @@ export const useElementHover = () => {
         nodeRef.current.addEventListener("mouseout", handleMouseOut);
       }
     },
-    [handleMouseOver, handleMouseOut]
+    [handleMouseOver, handleMouseOut, disabled]
   );
 
   return { callbackRef, isHovering };

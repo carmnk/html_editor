@@ -4,184 +4,217 @@ import {
   PropsWithChildren,
   MouseEvent,
   useMemo,
-} from "react";
-import { HtmlEditorElementType } from "./EditorState";
-import { Box, useTheme } from "@mui/material";
-import { useElementHover } from "../hooks/useElementHover";
-import { EditorStateType } from "./EditorState";
-import { getStylesFromClasses } from "./renderElements";
-import { useNavigate } from "react-router-dom";
+} from 'react'
+import { ElementType } from './editorController/editorState'
+import { Box, useTheme } from '@mui/material'
+import { useElementHover } from '../hooks/useElementHover'
+import { EditorStateType } from './editorController/editorState'
+import { getStylesFromClasses } from './renderElements'
+import { useNavigate } from 'react-router-dom'
 
 export type ElementBoxProps = {
-  element: HtmlEditorElementType;
-  editorState: EditorStateType;
-  onSelectElement: (
-    element: HtmlEditorElementType,
-    isHovering: boolean
-  ) => void;
-  isProduction?: boolean;
-};
+  element: ElementType
+  editorState: EditorStateType
+  onSelectElement: (element: ElementType, isHovering: boolean) => void
+  isProduction?: boolean
+  isPointerProduction?: boolean
+}
 
 const sx = {
-  position: "relative",
-};
+  position: 'relative',
+}
 
 export const ElementBox = (props: PropsWithChildren<ElementBoxProps>) => {
-  const { element, children, onSelectElement, editorState, isProduction } =
-    props;
-  const theme = useTheme();
-  const navigate = useNavigate();
+  const {
+    element,
+    children,
+    onSelectElement,
+    editorState,
+    isProduction,
+    isPointerProduction,
+  } = props
+  const theme = useTheme()
+  const navigate = useNavigate()
 
-  const { callbackRef: ref, isHovering } = useElementHover();
+  const { callbackRef: ref, isHovering } = useElementHover({
+    disabled: isProduction || isPointerProduction,
+  })
 
   const className =
-    "attributes" in element ? element?.attributes?.className : undefined;
+    'attributes' in element ? element?.attributes?.className : undefined
   const stylesFromClasses = getStylesFromClasses(
-    className ?? "",
-    editorState?.cssWorkspaces
-  );
+    className ?? '',
+    editorState?.cssSelectors
+  )
 
   const styles = useMemo(() => {
     const additionalHoverStyles =
-      !isProduction &&
-      (isHovering || editorState?.selectedHtmlElementName === element.id)
+      !(isProduction || isPointerProduction) &&
+      (isHovering || editorState?.ui.selected.element === element._id)
         ? {
             border:
-              "1px " +
-              (editorState?.selectedHtmlElementName === element.id
-                ? "solid "
-                : "dashed ") +
+              '1px ' +
+              (editorState?.ui.selected.element === element._id
+                ? 'solid '
+                : 'dashed ') +
               theme.palette.primary.main,
-            borderRadius: "1px",
-            "& >div:first-of-type": {
-              display: "block",
+            borderRadius: '1px',
+            '& >div:first-of-type': {
+              display: 'block',
             },
             //   width: "calc(100% - 2px)",
           }
-        : {};
+        : {}
+    const linkHoverStyles =
+      element._type === 'a' && (element as any)?.attributes?.href
+        ? { cursor: 'pointer' }
+        : {}
 
     const styleAttributes =
-      "attributes" in element ? element?.attributes?.style ?? {} : {};
+      'attributes' in element ? element?.attributes?.style ?? {} : {}
 
     const aggregatedUserStyles = {
       ...stylesFromClasses,
       ...styleAttributes,
-    };
-    const userOverridesEditorHoverStyles: CSSProperties = {};
-    if ("borderWidth" in aggregatedUserStyles) {
+    }
+    const userOverridesEditorHoverStyles: CSSProperties = {}
+    if ('borderWidth' in aggregatedUserStyles) {
       userOverridesEditorHoverStyles.borderWidth =
-        aggregatedUserStyles.borderWidth + " !important";
+        aggregatedUserStyles.borderWidth + ' !important'
     }
-    if ("borderStyle" in aggregatedUserStyles) {
+    if ('borderStyle' in aggregatedUserStyles) {
       userOverridesEditorHoverStyles.borderStyle =
-        aggregatedUserStyles.borderStyle + " !important";
+        aggregatedUserStyles.borderStyle + ' !important'
     }
-    if ("borderColor" in aggregatedUserStyles) {
+    if ('borderColor' in aggregatedUserStyles) {
       userOverridesEditorHoverStyles.borderColor =
-        aggregatedUserStyles.borderColor + " !important";
+        aggregatedUserStyles.borderColor + ' !important'
     }
-    if ("borderRadius" in aggregatedUserStyles) {
+    if ('borderRadius' in aggregatedUserStyles) {
       userOverridesEditorHoverStyles.borderRadius =
-        aggregatedUserStyles.borderRadius + " !important";
+        aggregatedUserStyles.borderRadius + ' !important'
     }
+
+    // interesting: top=0 -> not default -> inject only if top:0, left:0 is set !! Otherwise the position is as static 
+    const compensateFixedStylesInEditor =
+      !isProduction && aggregatedUserStyles.position === 'fixed'
+        ? {
+            // top: 42,
+            // left: 364,
+            // width: 'calc(100% - 364px - 350px)',
+          }
+        : {}
 
     return {
       ...sx,
+      ...linkHoverStyles,
       ...stylesFromClasses,
       ...styleAttributes,
+
       ...additionalHoverStyles,
       ...userOverridesEditorHoverStyles,
+      ...compensateFixedStylesInEditor,
+
       //   backgroundColor: "rgba(0,150,136,0.1)",
-    } as CSSProperties;
+    } as CSSProperties
   }, [
     isHovering,
-    editorState?.selectedHtmlElementName,
+    editorState.ui.selected.element,
     theme,
     stylesFromClasses,
     isProduction,
+    isPointerProduction,
     element,
-  ]);
+  ])
 
   // useEffect(() => {
   //   onSelectElement(element, isHovering);
   // }, [isHovering, element, onSelectElement]);
 
-  const isOverheadHtmlElement = ["html", "head", "body"].includes(element.type);
+  const isOverheadHtmlElement = ['html', 'head', 'body'].includes(element._type)
   const elementAttributs =
-    "attributes" in element
+    'attributes' in element
       ? (element?.attributes as HTMLProps<HTMLLinkElement> & {
-          href: string;
+          href: string
         })
-      : ({} as HTMLProps<HTMLLinkElement>);
+      : ({} as HTMLProps<HTMLLinkElement>)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { style, href, ...styleLessAttributes } = elementAttributs;
+  const { style, href, ...styleLessAttributes } = elementAttributs ?? {}
 
   const boxProps = useMemo(
     () => ({
       // id: isOverheadHtmlElement ? element.type + "_" + element?.id : element.id,
       component: isOverheadHtmlElement
-        ? ("div" as const)
-        : (element.type as any),
-      key: element.id,
+        ? ('div' as const)
+        : (element._type as any),
+      key: element._id,
       ...(styleLessAttributes ?? {}),
       sx: styles,
     }),
     [element, isOverheadHtmlElement, styles, styleLessAttributes]
-  );
+  )
 
   const linkProps = useMemo(() => {
-    if (element.type === "a") {
+    if (element._type === 'a') {
       return {
         onClick: (e: MouseEvent<HTMLAnchorElement, MouseEvent>) => {
-          e.preventDefault();
+          console.log('element onclick', element)
+          e.preventDefault()
           const attributes =
             element.attributes as HTMLProps<HTMLLinkElement> & {
-              href: string;
-            };
-          if (attributes?.href?.startsWith("http")) {
-            window.open(attributes?.href, "_blank");
+              href: string
+            }
+
+          const isExternalLink = !attributes?.href?.startsWith('/')
+          console.log('attributes', attributes, isExternalLink)
+          if (isExternalLink) {
+            window.open(attributes?.href, '_blank')
           } else {
-            navigate(attributes?.href ?? "");
+            // const
+            navigate(attributes?.href?.slice(1) ?? '')
           }
         },
-      };
+      }
     }
-    return {};
-  }, [element, navigate]);
+    return {}
+  }, [element, navigate])
 
   const uiEditorHandlers = useMemo(() => {
-    return {
-      onClick: (e: MouseEvent<HTMLDivElement, MouseEvent>) => {
-        e.stopPropagation();
-        onSelectElement(element, isHovering);
-      },
-    };
-  }, [onSelectElement, element, isHovering]);
+    return isProduction || isPointerProduction
+      ? {}
+      : {
+          onClick: (e: MouseEvent<HTMLDivElement, MouseEvent>) => {
+            e.stopPropagation()
+            onSelectElement(element, isHovering)
+          },
+        }
+  }, [onSelectElement, element, isHovering, isProduction, isPointerProduction])
 
-  return ["br", "hr", "img"].includes(element?.type) ? (
+  return ['br', 'hr', 'img'].includes(element?._type) ? (
     <Box {...boxProps} {...linkProps} ref={ref} />
   ) : (
     <Box {...linkProps} {...boxProps} {...uiEditorHandlers} ref={ref}>
       {/* label */}
-      {!isProduction && (
-        <Box
-          // onMouseOver={() => {}}
-          // onMouseOut={() => {}}
-          sx={{
-            display: "none",
-            position: "absolute",
-            top: 0,
-            right: 0,
-            border: "1px solid rgba(0,150,136,0.5)",
-            borderRadius: "1px",
-            color: "text.primary",
-          }}
-        >
-          {element.type}
-        </Box>
-      )}
+      {!(isProduction || isPointerProduction) &&
+        ((
+          <Box
+            // onMouseOver={() => {}}
+            // onMouseOut={() => {}}
+            sx={{
+              display: 'none',
+              position: 'absolute',
+              top: 0,
+              right: 0,
+              border: '1px solid rgba(0,150,136,0.5)',
+              borderRadius: '1px',
+              color: 'text.primary',
+            }}
+          >
+            {element._type}
+          </Box>
+        ) as any)}
 
-      {("content" in element ? element?.content : children) || children}
+      {('_content' in element ? element?._content : children) || children}
     </Box>
-  );
-};
+  )
+}

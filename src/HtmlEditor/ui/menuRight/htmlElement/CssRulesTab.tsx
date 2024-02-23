@@ -1,103 +1,103 @@
-import { Stack, Typography, Box, useTheme } from "@mui/material";
-import { CGrid } from "../../../../components/basics/CGrid";
-import { useCallback, useMemo } from "react";
-import { getStylesFromClasses } from "../../../renderElements";
-import { CSS_RULES_VALUES_OPTIONS } from "../../../defs/CssRuleNamesDict";
-import { CSelect } from "../../../../components/inputs/CSelect";
-import { EditorControllerType } from "../../../editorController/editorController";
-import { ClickTextField } from "../../../../components/inputs/ClickTextField";
-import { cssRulesFilterOptions } from "./_defHtmlElementCssRulesFilterOptions";
+import { Stack, Typography, Box, useTheme } from '@mui/material'
+import { CGrid } from '../../../../components/basics/CGrid'
+import { useCallback, useMemo } from 'react'
+import { getStylesFromClasses } from '../../../renderElements'
+import { CSS_RULES_VALUES_OPTIONS } from '../../../defs/CssRuleNamesDict'
+import { CSelect } from '../../../../components/inputs/CSelect'
+import { ClickTextField } from '../../../../components/inputs/ClickTextField'
+import { cssRulesFilterOptions } from './_defHtmlElementCssRulesFilterOptions'
+import { EditorControllerType } from '../../../editorController/editorControllerTypes'
+import { Flex } from '../../../../components/basics/Flex'
 
 export type RightMenuCssRuldeTabProps = {
-  editorController: EditorControllerType;
-};
+  editorController: EditorControllerType
+}
 
 export const RightMenuCssRuleTab = (props: RightMenuCssRuldeTabProps) => {
-  const { editorController } = props;
+  const { editorController } = props
   const {
     editorState,
-    selectedHtmlElement,
-    selectedHtmlElementStyleAttributes: cssAttributes,
+    selectedHtmlElement2: selectedHtmlElement,
+    selectedHtmlElementStyleAttributes2: cssAttributes,
     actions,
-  } = editorController;
+  } = editorController
   const {
-    handleToggleHtmlElementEditCssRule,
+    toggleHtmlElementEditCssRule,
     changeHtmlElementEditedCssRuleValue,
-    handleRemoveCurrentHtmlElementStyleAttribute,
-  } = actions.htmlElement;
-  const { handleSelectHtmlElementCssPropertiesListFilter } =
-    actions.ui.detailsMenu;
+    removeCurrentHtmlElementStyleAttribute,
+  } = actions.htmlElement
+  const { selectHtmlElementCssPropertiesListFilter } = actions.ui.detailsMenu
 
-  const theme = useTheme();
+  const theme = useTheme()
   const activeEditRule =
-    editorState?.ui?.detailsMenu?.htmlElement?.editCssRuleName;
-  const className = (selectedHtmlElement as any)?.attributes?.className;
+    editorState?.ui?.detailsMenu?.htmlElement?.editCssRuleName
+  const className = (selectedHtmlElement as any)?.attributes?.className
 
   const classAttributes = useMemo(
     () =>
       !className
         ? {}
-        : getStylesFromClasses(className, editorState?.cssWorkspaces),
-    [className, editorState?.cssWorkspaces]
-  );
+        : getStylesFromClasses(className, editorState?.cssSelectors),
+    [className, editorState?.cssSelectors]
+  )
 
   const attributes = useMemo(() => {
     const allAttributes = {
       ...classAttributes,
       ...cssAttributes,
-    };
+    }
     return Object.keys(
-      editorState?.ui?.detailsMenu?.htmlElement?.cssRulesFilter === "all"
+      editorState?.ui?.detailsMenu?.htmlElement?.cssRulesFilter === 'all'
         ? allAttributes
         : editorState?.ui?.detailsMenu?.htmlElement?.cssRulesFilter ===
-          "classes"
+          'classes'
         ? classAttributes
         : cssAttributes
-    );
+    )
   }, [
     cssAttributes,
     classAttributes,
     editorState?.ui?.detailsMenu?.htmlElement?.cssRulesFilter,
-  ]);
+  ])
 
   const ruleValueEditOptions =
     (activeEditRule &&
       activeEditRule in CSS_RULES_VALUES_OPTIONS &&
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (CSS_RULES_VALUES_OPTIONS as any)?.[activeEditRule]) ||
-    [];
+    []
 
   const handleToggleEditRule = useCallback(
     (attributeName: string) => {
-      handleToggleHtmlElementEditCssRule(attributeName);
+      toggleHtmlElementEditCssRule(attributeName)
     },
-    [handleToggleHtmlElementEditCssRule]
-  );
+    [toggleHtmlElementEditCssRule]
+  )
 
   const handleTakeoverEditedRuleValue = useCallback(
     (newValue: string) => {
-      if (!activeEditRule) return;
-      changeHtmlElementEditedCssRuleValue(newValue, activeEditRule);
+      if (!activeEditRule) return
+      changeHtmlElementEditedCssRuleValue(newValue, activeEditRule)
     },
     [activeEditRule, changeHtmlElementEditedCssRuleValue]
-  );
+  )
 
   const handleRemoveRule = useCallback(
     (attributeName: string) => {
-      handleRemoveCurrentHtmlElementStyleAttribute(attributeName);
+      removeCurrentHtmlElementStyleAttribute(attributeName)
     },
-    [handleRemoveCurrentHtmlElementStyleAttribute]
-  );
+    [removeCurrentHtmlElementStyleAttribute]
+  )
 
   return (
     <>
-      <Stack gap={2} borderLeft={"1px solid " + theme.palette.divider} p={1}>
+      <Stack gap={2} borderLeft={'1px solid ' + theme.palette.divider} p={1}>
         <Box>
           <CSelect
             value={
-              editorState?.ui?.detailsMenu?.htmlElement?.cssRulesFilter ?? ""
+              editorState?.ui?.detailsMenu?.htmlElement?.cssRulesFilter ?? ''
             }
-            onChange={handleSelectHtmlElementCssPropertiesListFilter}
+            onChange={selectHtmlElementCssPropertiesListFilter}
             options={cssRulesFilterOptions}
           />
         </Box>
@@ -109,13 +109,13 @@ export const RightMenuCssRuleTab = (props: RightMenuCssRuldeTabProps) => {
         >
           <Box
             fontWeight={700}
-            borderBottom={"1px solid " + theme.palette.text.primary}
+            borderBottom={'1px solid ' + theme.palette.text.primary}
           >
             Rule
           </Box>
           <Box
             fontWeight={700}
-            borderBottom={"1px solid " + theme.palette.text.primary}
+            borderBottom={'1px solid ' + theme.palette.text.primary}
           >
             Value
           </Box>
@@ -123,16 +123,15 @@ export const RightMenuCssRuleTab = (props: RightMenuCssRuldeTabProps) => {
           <Box fontWeight={700}></Box>
           {attributes?.map((attributeName) => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const ruleValue = (cssAttributes as any)?.[attributeName] ?? "";
+            const ruleValue = (cssAttributes as any)?.[attributeName] ?? ''
             return (
               <>
                 <Typography variant="body2" height="16px" mt={1}>
                   {attributeName}
                 </Typography>
 
-                <Stack
+                <Flex
                   mt={1}
-                  direction="row"
                   justifyContent="space-between"
                   minHeight={24}
                   alignItems="center"
@@ -142,37 +141,37 @@ export const RightMenuCssRuleTab = (props: RightMenuCssRuldeTabProps) => {
                     value={
                       editorState?.ui?.detailsMenu?.htmlElement?.editCssRuleName
                         ? editorState?.ui?.detailsMenu?.htmlElement
-                            ?.editCssRuleName ?? ""
+                            ?.editCssRuleName ?? ''
                         : ruleValue
                     }
                     onToggle={(isEdit) =>
-                      handleToggleEditRule(isEdit ? attributeName : "")
+                      handleToggleEditRule(isEdit ? attributeName : '')
                     }
                     options={ruleValueEditOptions}
                     onChange={handleTakeoverEditedRuleValue}
                     typographyProps={{
-                      variant: "body2",
-                      height: "16px",
-                      color: "text.secondary",
+                      variant: 'body2',
+                      height: '16px',
+                      color: 'text.secondary',
                     }}
                     handleRemoveItem={() => handleRemoveRule(attributeName)}
                   />
-                </Stack>
+                </Flex>
               </>
-            );
+            )
           })}
           <Box
             minHeight={24}
             fontWeight={700}
-            borderBottom={"1px solid " + theme.palette.text.primary}
+            borderBottom={'1px solid ' + theme.palette.text.primary}
           ></Box>
           <Box
             minHeight={24}
             fontWeight={700}
-            borderBottom={"1px solid " + theme.palette.text.primary}
+            borderBottom={'1px solid ' + theme.palette.text.primary}
           ></Box>
         </CGrid>
       </Stack>
     </>
-  );
-};
+  )
+}

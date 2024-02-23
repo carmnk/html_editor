@@ -1,180 +1,268 @@
 import {
-  HtmlEditorComponentElementTypes,
-  HtmlEditorElementKeyType,
-  HtmlEditorElementType,
-} from "./EditorState";
-import { StyledTreeItemProps } from "../components/treeview/CTreeItem";
-import { v4 as uuid } from "uuid";
-import { ElementBox } from "./ElementBox";
-import { EditorStateType } from "./EditorState";
-import { Button } from "../components/buttons/Button";
-import { Box, Chip, Typography } from "@mui/material";
-import { mdiCodeBlockTags, mdiReact } from "@mdi/js";
-import Icon from "@mdi/react";
-import { CTabs } from "../components/navigation/CTabs";
-import { EditorControllerType } from "./editorController/editorController";
-import { baseComponents } from "./defs/baseComponents";
-import { CBottomNavigation } from "../components/navigation/CBottomNavigation";
-import { CListNavigation } from "../components/navigation/CListNavigation";
+  ComponentElementTypes,
+  ElementKeyType,
+  ElementType,
+} from './editorController/editorState'
+import { StyledTreeItemProps } from '../components/treeview/CTreeItem'
+import { v4 as uuid } from 'uuid'
+import { ElementBox } from './ElementBox'
+import { EditorStateType } from './editorController/editorState'
+import { AppBar, Box, Paper } from '@mui/material'
+import { mdiCodeBlockTags, mdiReact } from '@mdi/js'
+import Icon from '@mdi/react'
+import { baseComponents } from './editorComponents/baseComponents'
+import { EditorControllerType } from './editorController/editorControllerTypes'
+import React from 'react'
+import { PropertyType } from './editorComponents/rawSchema'
 
 export const isStringLowerCase = (str: string): boolean => {
-  return str === str.toLowerCase();
-};
+  return str === str.toLowerCase()
+}
 
 export const isComponentType = (
-  type: HtmlEditorElementKeyType
-): type is HtmlEditorComponentElementTypes =>
-  !isStringLowerCase(type.slice(0, 1));
+  type: ElementKeyType
+): type is ComponentElementTypes => !isStringLowerCase(type.slice(0, 1))
 
 export const renderHtmlElements = (
-  elements: HtmlEditorElementType[],
+  elements: ElementType[],
   editorController: EditorControllerType,
-  onSelectElement: (
-    element: HtmlEditorElementType,
-    isHovering: boolean
-  ) => void,
+  onSelectElement: (element: ElementType, isHovering: boolean) => void,
   isProduction?: boolean,
-  icons?: { [key: string]: string }
+  icons?: { [key: string]: string },
+  parentId?: string,
+  isPointerProduction?: boolean
 ): React.ReactNode => {
-  const { editorState, actions, appState } = editorController;
-  const rawElements = elements.map((element, eIdx) => {
-    const typeFirstLetter = element.type.slice(0, 1);
-    const isHtmlElement = isStringLowerCase(typeFirstLetter);
-    const iconKey = ((element as any)?.props?.icon as string) ?? "";
-    const elementAdj = iconKey
-      ? {
-          ...element,
-          props: {
-            ...(((element as any)?.props as any) ?? {}),
-            icon: icons?.[iconKey],
-          },
+  const { editorState, actions, appState } = editorController
+
+  const elementsAdj = (
+    !parentId
+      ? elements?.filter((el) => !el._parentId)
+      : elements?.filter((el) => el._parentId === parentId)
+  )?.filter((el) => el._page === editorState.ui.selected.page)
+
+  const rawElements = elementsAdj.map((element, eIdx) => {
+    const typeFirstLetter = element._type.slice(0, 1)
+    const isHtmlElement = isStringLowerCase(typeFirstLetter)
+
+    const props = (element as any)?.schema?.properties ?? {}
+    const elementIconKeys = isHtmlElement
+      ? []
+      : Object.keys(props)?.filter(
+          (key) => props[key]?.type === PropertyType.icon
+        )
+    const elementArrayKeys = isHtmlElement
+      ? []
+      : Object.keys(props)?.filter((key) => {
+          const itemsProps = (props?.[key] as any)?.items?.[0]?.properties
+          return (
+            props[key]?.type === PropertyType.Array &&
+            Object.keys(itemsProps)?.filter?.(
+              (key) => itemsProps[key]?.type === PropertyType.icon
+            )
+          )
+        })
+    const elementArrayIconInjectionDict = elementArrayKeys
+      .map((key) => {
+        const itemsProps = (props?.[key] as any)?.items?.[0]?.properties
+        return Object.keys(itemsProps)
+          ?.filter((key) => itemsProps[key]?.type === PropertyType.icon)
+          ?.map((itemKey) => ({ key, itemKey }))
+      })
+      .flat()
+      ?.reduce((acc, it) => {
+        return {
+          ...acc,
+          [it.key]: (element as any)?.props?.[it.key]?.map?.((item: any) => ({
+            ...item,
+            [it.itemKey]: icons?.[item[it.itemKey]],
+          })),
         }
-      : element;
+      }, {})
 
-    const navValueState = (appState as any)?.state?.[element?.id] ?? {};
-    // if (element?.type === "Tabs") {
-    //   console.log("navValueState", navValueState, appState);
-    // }
+    // e.g. {...., icon: mdiPencil, ... }
+    const injectedIconsDict = elementIconKeys?.reduce(
+      (acc, key) => ({
+        ...acc,
+        [key]: icons?.[(element as any)?.props?.[key]],
+      }),
+      {}
+    )
+
+    const baseComponent = baseComponents?.find(
+      (com) => com.type === element?._type
+    )
+    const CurrentComponent =
+      baseComponent &&
+      'component' in baseComponent &&
+      (baseComponent.component as React.ComponentType<any>)
+
+    const elementAdj = {
+      ...element,
+      props: {
+        ...(((element as any)?.props as any) ?? {}),
+        // ...iconInjection,
+        // ...endIconInjection,
+        ...injectedIconsDict,
+
+        ...elementArrayIconInjectionDict,
+      },
+    }
+
+    const navValueState = (appState as any)?.state?.[element?._id] ?? {}
     const onTabChange = (tabValue: string) => {
-      console.log("CLICKED TAB", tabValue);
-      appState.actions.updateProperty(element?.id, tabValue);
-    };
+      appState.actions.updateProperty(element?._id, tabValue)
+    }
 
+    const elementChildren =
+      editorState?.elements?.filter((el) => el._parentId === element._id) ?? []
     const tabChildren =
-      element?.type === "NavContainer"
+      element?._type === ('NavContainer' as any)
         ? (() => {
-            const sourceControlElementId = element?.props?.navigationElementId;
+            const sourceControlElementId = (element as any)?.props
+              ?.navigationElementId
 
-            if (!sourceControlElementId) return [];
-            const activeTab = appState?.state?.[sourceControlElementId];
-            const activeId = element?.props?.items?.find(
+            if (!sourceControlElementId) return []
+            const activeTab = appState?.state?.[sourceControlElementId]
+            const activeId = (element as any)?.props?.items?.find(
               (item: any) => item.value === activeTab
-            )?.childId;
-            const activeChild = element?.children?.find?.(
-              (child) => child.id === activeId
-            );
-            const children = activeChild ? [activeChild] : [];
-            return children;
+            )?.childId
+            const activeChild = elementChildren?.find?.(
+              (child) => child._id === activeId
+            )
+            const children = activeChild ? [activeChild] : []
+            return children
           })()
-        : [];
+        : []
 
+    const renderedElementChildren =
+      !!elementChildren?.length &&
+      renderHtmlElements(
+        elementChildren,
+        editorController,
+        onSelectElement,
+        isProduction,
+        icons,
+        element._id,
+        isPointerProduction
+      )
+
+    const TabChildren =
+      !!tabChildren?.length &&
+      renderHtmlElements(
+        tabChildren,
+        editorController,
+        onSelectElement,
+        isProduction,
+        icons,
+        element._id,
+        isPointerProduction
+      )
+
+    // console.log(
+    //   element._type,
+    //   element,
+    //   ['Tabs', 'BottomNavigation', 'ListNavigation', 'ButtonGroup'].includes(
+    //     element?._type
+    //   ),
+    //   CurrentComponent
+    // )
     return isHtmlElement ? (
       <ElementBox
         element={element}
         onSelectElement={onSelectElement}
         editorState={editorState}
-        key={element.id}
-        isProduction={isProduction}
+        key={element._id}
+        isProduction={isProduction || isPointerProduction}
       >
-        {!!element?.children?.length &&
-          renderHtmlElements(
-            element.children,
-            editorController,
-            onSelectElement,
-            isProduction,
-            icons
-          )}
+        {renderedElementChildren}
       </ElementBox>
-    ) : isComponentType(element.type) ? (
-      element?.type === "Button" ? (
-        <Button {...((elementAdj as any)?.props ?? {})}>TEST</Button>
-      ) : element?.type === "Chip" ? (
-        <Chip {...(element?.props ?? {})} />
-      ) : element?.type === "Typography" ? (
-        <Typography {...(element?.props ?? {})} />
+    ) : // components
+    isComponentType(element._type) ? (
+      ['Button', 'Chip', 'Typography'].includes(element?._type) &&
+      CurrentComponent ? (
+        <CurrentComponent {...((elementAdj as any)?.props ?? {})} />
       ) : //  NAVIGATION ELEMENTS (slightly different interface)
-      element?.type === "Tabs" ? (
-        <CTabs
+      ['Tabs', 'BottomNavigation', 'ListNavigation', 'ButtonGroup'].includes(
+          element?._type
+        ) && CurrentComponent ? (
+        <CurrentComponent
+          {...((elementAdj as any)?.props ?? {})} // icon injections needed ? -> more generic approach
+          onChange={onTabChange}
+          value={navValueState}
+        >
+          {renderedElementChildren}
+        </CurrentComponent>
+      ) : element?._type === 'AppBar' ? (
+        <AppBar
+          {...((element?.props as any) ?? {})}
+          sx={
+            (element?.props?.position === 'fixed' ||
+              !element?.props?.position) &&
+            !isProduction
+              ? {
+                  top: 42,
+                  left: 364,
+                  width: 'calc(100% - 364px - 350px)',
+                }
+              : {}
+          }
+          onChange={onTabChange}
+          value={navValueState}
+        >
+          {renderedElementChildren}
+        </AppBar>
+      ) : element?._type === 'Paper' ? (
+        <Paper
           {...((element?.props as any) ?? {})}
           onChange={onTabChange}
           value={navValueState}
-        />
-      ) : element?.type === "BottomNavigation" ? (
-        <CBottomNavigation
-          {...((element?.props as any) ?? {})}
-          onChange={onTabChange}
-          value={navValueState}
-        />
-      ) : element?.type === "ListNavigation" ? (
-        <CListNavigation
-          {...((element?.props as any) ?? {})}
-          onChange={onTabChange}
-          value={navValueState}
-        />
+        >
+          {renderedElementChildren}
+        </Paper>
       ) : // Navigation Container -> specific render case (but could be component, too)
-      element?.type === "NavContainer" ? (
+      element?._type === 'NavContainer' ? (
         (() => {
-          const { children, ...childLessProps } = element?.props ?? {};
-          return (
-            <Box {...(childLessProps ?? {})}>
-              {!!tabChildren?.length &&
-                renderHtmlElements(
-                  tabChildren,
-                  editorController,
-                  onSelectElement,
-                  isProduction,
-                  icons
-                )}
-            </Box>
-          );
+          const { children, ...childLessProps } = element?.props ?? {}
+          return <Box {...(childLessProps ?? {})}>{TabChildren}</Box>
         })()
       ) : null
-    ) : null;
-  });
-  return rawElements;
-};
+    ) : null
+  })
+  return rawElements
+}
 
 export const mapHtmlElementsToTreeItems = (
-  elements: HtmlEditorElementType[],
+  elements: ElementType[],
+  allElements: ElementType[],
   isDraggable: boolean,
-  rootElements?: HtmlEditorElementType[],
+  rootElements?: ElementType[],
   parentNavContainerId?: string
 ): StyledTreeItemProps[] => {
   const treeItems = elements.map((element, eIdx) => {
-    const id = element?.id ?? uuid();
+    const id = element?._id ?? uuid()
 
     const parentNavContainer = parentNavContainerId
-      ? findElementById(parentNavContainerId, rootElements ?? [])?.[0]
-      : null;
+      ? allElements?.find((el) => el._id === parentNavContainerId)
+      : null
     const parentNavContainerItems =
-      (parentNavContainer as any)?.props?.items ?? [];
+      (parentNavContainer as any)?.props?.items ?? []
     const caseName = parentNavContainerItems?.find(
       (item: any) => item.childId === id
-    )?.value;
+    )?.value
 
-    console.log(parentNavContainer, parentNavContainerItems, caseName);
-
+    const children = allElements?.filter((el) => el._parentId === id)
     return {
+      _parentId: element._parentId,
       key: id,
-      type: element.type,
+      type: element._type,
       parentNavContainerId,
       nodeId: id,
       element,
       labelIcon: (
         <Icon
           path={
-            isComponentType(element.type)
-              ? baseComponents?.find((com) => com.type === element?.type)
+            isComponentType(element._type)
+              ? baseComponents?.find((com) => com.type === element?._type)
                   ?.icon ?? mdiReact
               : mdiCodeBlockTags
           }
@@ -182,62 +270,44 @@ export const mapHtmlElementsToTreeItems = (
         />
       ),
       labelText:
-        (parentNavContainerId ? (caseName ? "↦" + caseName + ":" : "⚠:") : "") +
-        (element.type +
-          ((element as any).attributes?.id ?? (element as any)?.userID
-            ? `#${(element as any).attributes?.id ?? (element as any)?.userID}`
-            : "")),
-      children: element?.children?.length
+        (parentNavContainerId ? (caseName ? '↦' + caseName + ':' : '⚠:') : '') +
+        (element._type +
+          ((element as any).attributes?.id ?? element?._userID
+            ? `#${(element as any).attributes?.id ?? element?._userID}`
+            : '')),
+      children: children?.length
         ? mapHtmlElementsToTreeItems(
-            element.children,
+            children,
+            allElements,
             isDraggable,
             rootElements ?? elements,
-            element?.type === "NavContainer" ? element?.id : undefined
+            element?._type === ('NavContainer' as any) ? id : undefined
           )
         : [],
       useDraggable: isDraggable,
-    } as StyledTreeItemProps;
-  }) as StyledTreeItemProps[];
-  return treeItems as any;
-};
+    } as StyledTreeItemProps
+  }) as StyledTreeItemProps[]
+  return treeItems as any
+}
 
 export const getStylesFromClasses = (
-  className: string,
-  cssWorkspaces: EditorStateType["cssWorkspaces"]
+  selectorId: string,
+  cssSelectors: EditorStateType['cssSelectors']
 ): React.CSSProperties => {
-  const classNames = className?.trim?.()?.split?.(" ");
-  const classStyles = classNames?.map(
-    (className) => cssWorkspaces?.common?.[className] ?? {}
-  );
-  const stylesFromClasses = classStyles?.reduce?.((acc, curr) => {
-    return {
-      ...acc,
-      ...curr,
-    };
-  }, {});
-  return stylesFromClasses;
-};
+  const className = cssSelectors.find((sel) => sel._id === selectorId)?._userId
 
-export const findElementById = <
-  T extends keyof HTMLElementTagNameMap = keyof HTMLElementTagNameMap
->(
-  id: string,
-  root: any[],
-  path?: string[]
-): [HtmlEditorElementType<T>, string[]] | null => {
-  for (let i = 0; i < root.length; i++) {
-    const element = root[i];
-    if (element.id === id) {
-      return [element, path ?? []];
-    }
-    if (element.children?.length) {
-      const newPath = [...(path ?? []), element.id];
-      const [foundEl, pathBack] =
-        findElementById(id, element.children, newPath) ?? [];
-      if (foundEl) {
-        return [foundEl as any, pathBack ?? []];
-      }
-    }
-  }
-  return null;
-};
+  const classNames = className?.trim?.()?.split?.(' ') || []
+  const cssSelector = cssSelectors?.find(
+    (selector) => classNames.includes(selector._userId) // or _id?!
+  )
+
+  const classStyles = cssSelector ?? {}
+
+  // const stylesFromClasses = classStyles?.reduce?.((acc, curr) => {
+  //   return {
+  //     ...acc,
+  //     ...curr,
+  //   };
+  // }, {});
+  return classStyles
+}

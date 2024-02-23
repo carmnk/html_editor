@@ -3,7 +3,7 @@
 import { Box, Popover, hexToRgb, useTheme } from "@mui/material";
 import React, { CSSProperties, useEffect } from "react";
 import { SketchPicker } from "react-color";
-import { Button } from "../buttons/Button";
+import { Button } from "../buttons/Button/Button";
 import { mdiCheck } from "@mdi/js";
 
 type GenericColorPickerProps = {

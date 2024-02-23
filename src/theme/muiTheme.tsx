@@ -1,8 +1,9 @@
-import { responsiveFontSizes, createTheme, Theme } from "@mui/material";
+import { responsiveFontSizes, createTheme, Theme } from '@mui/material'
+import { v4 as uuid } from 'uuid'
 
-export type ExtendedTheme = Theme & { name: string };
+export type ExtendedTheme = Theme & { name: string; id: string }
 
-declare module "@mui/material/styles/createTypography" {
+declare module '@mui/material/styles/createTypography' {
   interface Typography {
     // title: TypographyStyle;
     // subtitle: TypographyStyle;
@@ -20,8 +21,8 @@ declare module "@mui/material/styles/createTypography" {
     // hText: TypographyStyleOptions;
   }
 }
-const mainLightColor = "#008080";
-const mainDarkColor = "#009688";
+const mainLightColor = '#008080'
+const mainDarkColor = '#009688'
 
 export const muiLightSiteTheme: ExtendedTheme = {
   ...(responsiveFontSizes(
@@ -32,14 +33,14 @@ export const muiLightSiteTheme: ExtendedTheme = {
           // main: mainColor,
         },
         secondary: {
-          main: "#f50057",
+          main: '#f50057',
         },
-        mode: "light",
+        mode: 'light',
       },
       typography: {
         body1: {
           lineHeight: 1.5,
-          fontSize: "1.2rem",
+          fontSize: '1.2rem',
           fontWeight: 400,
         },
         body2: {
@@ -54,42 +55,42 @@ export const muiLightSiteTheme: ExtendedTheme = {
         // },
         h1: {
           fontWeight: 600,
-          fontSize: "3rem",
+          fontSize: '3rem',
           lineHeight: 1.75,
           fontFamily: "'Work Sans',Roboto,Helvetica,Arial,sans-serif",
           color: mainLightColor,
         },
         h2: {
           fontWeight: 600,
-          fontSize: "2.5rem",
+          fontSize: '2.5rem',
           lineHeight: 1.75,
           fontFamily: "'Work Sans',Roboto,Helvetica,Arial,sans-serif",
           color: mainLightColor,
         },
         h3: {
           fontWeight: 600,
-          fontSize: "2.1rem",
+          fontSize: '2.1rem',
           lineHeight: 1.75,
           fontFamily: "'Work Sans',Roboto,Helvetica,Arial,sans-serif",
           color: mainLightColor,
         },
         h4: {
           fontWeight: 600,
-          fontSize: "1.8rem",
+          fontSize: '1.8rem',
           lineHeight: 1.75,
           fontFamily: "'Work Sans',Roboto,Helvetica,Arial,sans-serif",
           color: mainLightColor,
         },
         h5: {
           fontWeight: 600,
-          fontSize: "1.44rem",
+          fontSize: '1.44rem',
           lineHeight: 1.75,
           fontFamily: "'Work Sans',Roboto,Helvetica,Arial,sans-serif",
           color: mainLightColor,
         },
         h6: {
           fontWeight: 600,
-          fontSize: "1.25rem",
+          fontSize: '1.25rem',
           lineHeight: 1.75,
           fontFamily: "'Work Sans',Roboto,Helvetica,Arial,sans-serif",
           color: mainLightColor,
@@ -99,8 +100,9 @@ export const muiLightSiteTheme: ExtendedTheme = {
     }),
     { factor: 2 }
   ) ?? {}),
-  name: "light",
-};
+  name: 'light',
+  id: uuid(),
+}
 
 export const muiDarkSiteTheme: ExtendedTheme = {
   ...(responsiveFontSizes(
@@ -110,25 +112,25 @@ export const muiDarkSiteTheme: ExtendedTheme = {
           main: mainDarkColor,
         },
         secondary: {
-          main: "#f50057",
+          main: '#f50057',
         },
-        mode: "dark",
+        mode: 'dark',
         background: {
-          paper: "#333",
-          default: "#333",
+          paper: '#333',
+          default: '#333',
         },
       },
       typography: {
         body1: {
           fontWeight: 400,
           lineHeight: 1.5,
-          fontSize: "1.2rem",
-          color: "#fff",
+          fontSize: '1.2rem',
+          color: '#fff',
           // fontFamily: '"Open Sans",Roboto,Helvetica,Arial,sans-serif',
         },
         body2: {
           lineHeight: 1.5,
-          color: "#ccc",
+          color: '#ccc',
         },
         // para1: { lineHeight: 1.75, fontSize: "1.1rem", paddingTop: 8, paddingBottom: 8, color: "#fff" },
         // inlinePara1: { lineHeight: 1.75, fontSize: "1.1rem", color: "#fff" },
@@ -138,42 +140,42 @@ export const muiDarkSiteTheme: ExtendedTheme = {
         // },
         h1: {
           fontWeight: 700,
-          fontSize: "3rem",
+          fontSize: '3rem',
           lineHeight: 1.75,
           fontFamily: "'Work Sans',Roboto,Helvetica,Arial,sans-serif",
           color: mainDarkColor,
         },
         h2: {
           fontWeight: 700,
-          fontSize: "2.5rem",
+          fontSize: '2.5rem',
           lineHeight: 1.75,
           fontFamily: "'Work Sans',Roboto,Helvetica,Arial,sans-serif",
           color: mainDarkColor,
         },
         h3: {
           fontWeight: 700,
-          fontSize: "2.1rem",
+          fontSize: '2.1rem',
           lineHeight: 1.75,
           fontFamily: "'Work Sans',Roboto,Helvetica,Arial,sans-serif",
           color: mainDarkColor,
         },
         h4: {
           fontWeight: 600,
-          fontSize: "1.8rem",
+          fontSize: '1.8rem',
           lineHeight: 1.75,
           fontFamily: "'Work Sans',Roboto,Helvetica,Arial,sans-serif",
           color: mainDarkColor,
         },
         h5: {
           fontWeight: 600,
-          fontSize: "1.44rem",
+          fontSize: '1.44rem',
           lineHeight: 1.75,
           fontFamily: "'Work Sans',Roboto,Helvetica,Arial,sans-serif",
           color: mainDarkColor,
         },
         h6: {
           fontWeight: 600,
-          fontSize: "1.25rem",
+          fontSize: '1.25rem',
           lineHeight: 1.75,
           fontFamily: "'Work Sans',Roboto,Helvetica,Arial,sans-serif",
           color: mainDarkColor,
@@ -183,5 +185,6 @@ export const muiDarkSiteTheme: ExtendedTheme = {
     }),
     { factor: 2 }
   ) ?? {}),
-  name: "dark",
-};
+  name: 'dark',
+  id: uuid(),
+}

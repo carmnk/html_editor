@@ -22,6 +22,9 @@
     "esModuleInterop": true
   },
 
-  "include": ["src"],
-  "references": [{ "path": "./tsconfig.node.json" }]
+
+  "include": ["src/**/*.ts", "src/HtmlEditor/editorComponents/components/Chip/chipDef.tsx", "src/HtmlEditor/ui/menuRight/htmlElement/CssTypographySelector.tsx"],
+  "references": [{ "path": "./tsconfig.node.json" }],
+
+  "exclude": ["node_modules"]
 }

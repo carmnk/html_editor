@@ -1,89 +1,102 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import * as React from "react";
-import { TreeView } from "@mui/x-tree-view/TreeView";
-import Icon from "@mdi/react";
-import { StyledTreeItem, StyledTreeItemProps } from "./CTreeItem";
-import { DndContext, DragOverlay } from "@dnd-kit/core";
-import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
+import * as React from 'react'
+import { TreeView } from '@mui/x-tree-view/TreeView'
+import Icon from '@mdi/react'
+import { StyledTreeItem, StyledTreeItemProps } from './CTreeItem'
+import { DndContext, DragOverlay } from '@dnd-kit/core'
+import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
 
-declare module "react" {
+declare module 'react' {
   interface CSSProperties {
-    "--tree-view-color"?: string;
-    "--tree-view-bg-color"?: string;
+    '--tree-view-color'?: string
+    '--tree-view-bg-color'?: string
   }
 }
 const treeViewProps = {
-  WebkitUserSelect: "none" /* Safari */,
-  MozUserSelect: "none" /* Firefox */,
-  MsUserSelect: "none" /* IE10+/Edge */,
-  userSelect: "none" /* Standard */,
-};
+  WebkitUserSelect: 'none' /* Safari */,
+  MozUserSelect: 'none' /* Firefox */,
+  MsUserSelect: 'none' /* IE10+/Edge */,
+  userSelect: 'none' /* Standard */,
+}
 
 const recursiveMap = (
   items: StyledTreeItemProps[],
   events: {
     additionalActions?:
       | AdditionalActionType[]
-      | ((item: any) => AdditionalActionType[]);
-    actions?: AdditionalActionType[] | ((item: any) => AdditionalActionType[]);
+      | ((item: any) => AdditionalActionType[])
+    actions?: AdditionalActionType[] | ((item: any) => AdditionalActionType[])
   },
   disableBorderLeft?: boolean,
-  toggleExpand?: (id: string) => void
+  toggleExpand?: (id: string) => void,
+  parentId?: string
 ): JSX.Element[] => {
+  const relevantElements = parentId
+    ? items?.filter((el) => el._parentId === parentId)
+    : items?.filter((el) => !el._parentId)
   return (
-    items?.map?.(({ icon, ...item }) => {
+    relevantElements?.map?.(({ icon, ...item }) => {
       const additionalActions =
-        typeof events?.additionalActions === "function"
+        typeof events?.additionalActions === 'function'
           ? events?.additionalActions(item)
-          : events?.additionalActions;
+          : events?.additionalActions
       const actions =
-        typeof events?.actions === "function"
+        typeof events?.actions === 'function'
           ? events?.actions(item)
-          : events?.actions;
-      const children = (item?.children ?? []) as StyledTreeItemProps[];
+          : events?.actions
+      const children = (item?.children ?? []) as StyledTreeItemProps[]
+      const { children: _c, ...props } = item
       return (
         <StyledTreeItem
-          {...item}
-          icon={typeof icon === "string" ? <Icon path={icon} size={1} /> : icon}
+          key={item.nodeId}
+          {...props}
+          icon={typeof icon === 'string' ? <Icon path={icon} size={1} /> : icon}
           disableBorderLeft={disableBorderLeft}
           additionalActions={additionalActions}
           actions={actions}
           toggleExpand={toggleExpand}
         >
-          {recursiveMap(children, events, undefined, toggleExpand) as any}
+          {((!!children?.length &&
+            recursiveMap(
+              children,
+              events,
+              undefined,
+              toggleExpand,
+              item.nodeId as any
+            )) as any) || undefined}
         </StyledTreeItem>
-      );
+      )
     }) ?? null
-  );
-};
+  )
+}
 
 export type AdditionalActionType = {
-  action: (nodeId: string | number, e: any) => void;
-  icon: string;
-  tooltip: string;
-  label: string;
-  disabled?: boolean;
-};
+  action: (nodeId: string | number, e: any) => void
+  icon: string
+  tooltip: string
+  label: string
+  disabled?: boolean
+}
 
 export type AdditionalActionGenType =
   | AdditionalActionType[]
-  | ((item: any) => AdditionalActionType[]);
+  | ((item: any) => AdditionalActionType[])
 
 export type CTreeViewProps = {
-  items: StyledTreeItemProps[];
-  actions?: AdditionalActionGenType;
-  additionalActions?: AdditionalActionGenType;
-  onToggleExpand?: (id: string, e: any) => void;
-  onToggleSelect?: (id: string, e: any) => void;
-  onDragDrop?: (event: any, draggedItem: any, droppedItem: any) => void; // nodeId is the id of the dropped item
-  onDragging?: (event: any, active: boolean, draggedItem: any) => void;
-  expandedItems?: string[];
-  selectedItems?: string[];
-  maxWidth?: number;
-  disableItemsFocusable?: boolean;
-  width?: number;
-};
+  items: StyledTreeItemProps[]
+  actions?: AdditionalActionGenType
+  additionalActions?: AdditionalActionGenType
+  onToggleExpand?: (id: string, e: any) => void
+  onToggleSelect?: (id: string, e: any) => void
+  onDragDrop?: (event: any, draggedItem: any, droppedItem: any) => void // nodeId is the id of the dropped item
+  onDragging?: (event: any, active: boolean, draggedItem: any) => void
+  expandedItems?: string[]
+  selectedItems?: string[]
+  maxWidth?: number
+  disableItemsFocusable?: boolean
+  width?: number
+}
 
 export const CTreeView = (props: CTreeViewProps) => {
   const {
@@ -99,50 +112,49 @@ export const CTreeView = (props: CTreeViewProps) => {
     onDragDrop,
     onDragging,
     width,
-  } = props;
+  } = props
 
   const [ui, setUi] = React.useState<{
-    dragging: { ctrKeyDown: boolean; active: boolean };
+    dragging: { ctrKeyDown: boolean; active: boolean }
   }>({
     dragging: { ctrKeyDown: false, active: false },
-  });
-  const [overlay, setOverlay] = React.useState<any>(null);
+  })
+  const [overlay, setOverlay] = React.useState<any>(null)
 
   const handleDragStart = React.useCallback((event: any) => {
-    const treeItemProps = event?.active?.data?.current;
-    console.log("Drag started!", event, treeItemProps);
-    setOverlay(treeItemProps);
+    const treeItemProps = event?.active?.data?.current
+
+    setOverlay(treeItemProps)
     setUi((current) => ({
       ...current,
       dragging: { ...current?.dragging, active: true },
-    }));
-  }, []);
+    }))
+  }, [])
   const handleDragEnd = React.useCallback(
     (event: any) => {
-      const overItem = event?.over?.data?.current;
-      const overNodeId = overItem?.nodeId;
-      // console.log("Drag ended!", event, overItem, overNodeId)
-      if (!overItem || !overlay) return;
+      const overItem = event?.over?.data?.current
+      const overNodeId = overItem?.nodeId
 
-      // console.log("DRAG sth", sensors);
-      onDragDrop?.(event, overlay, overItem);
-      setOverlay(null);
+      if (!overItem || !overlay) return
+
+      onDragDrop?.(event, overlay, overItem)
+      setOverlay(null)
       setUi((current) => ({
         ...current,
         dragging: { ctrKeyDown: false, active: false },
-      }));
-      onDragging?.(event, false, overlay);
-      lastMouseMoveEvent.current = null;
+      }))
+      onDragging?.(event, false, overlay)
+      lastMouseMoveEvent.current = null
     },
     [onDragDrop, overlay, onDragging]
-  );
+  )
 
-  const lastMouseMoveEvent = React.useRef<any>(null);
+  const lastMouseMoveEvent = React.useRef<any>(null)
   React.useEffect(() => {
     const mouseMoveListener = (e: any) => {
-      lastMouseMoveEvent.current = e;
-      const isCtrlPressed = e?.ctrlKey;
-      onDragging?.(e, true, overlay);
+      lastMouseMoveEvent.current = e
+      const isCtrlPressed = e?.ctrlKey
+      onDragging?.(e, true, overlay)
       setUi((current) =>
         isCtrlPressed !== current?.dragging?.ctrKeyDown
           ? {
@@ -150,12 +162,12 @@ export const CTreeView = (props: CTreeViewProps) => {
               dragging: { ...current.dragging, ctrKeyDown: isCtrlPressed },
             }
           : current
-      );
-    };
+      )
+    }
     const keyDownListener = (e: any) => {
-      const ctrlKey = e?.ctrlKey;
-      const newEvent = { ...(lastMouseMoveEvent.current ?? {}), ctrlKey };
-      onDragging?.(newEvent, true, overlay); // event handler is not addded if dragging is not active
+      const ctrlKey = e?.ctrlKey
+      const newEvent = { ...(lastMouseMoveEvent.current ?? {}), ctrlKey }
+      onDragging?.(newEvent, true, overlay) // event handler is not addded if dragging is not active
       setUi((current) =>
         ctrlKey !== current?.dragging?.ctrKeyDown
           ? {
@@ -163,15 +175,15 @@ export const CTreeView = (props: CTreeViewProps) => {
               dragging: { ...current.dragging, ctrKeyDown: ctrlKey },
             }
           : current
-      );
-    };
+      )
+    }
     const keyUpListener = (e: any) => {
-      const ctrlKey = e?.ctrlKey;
+      const ctrlKey = e?.ctrlKey
       const newEvent = {
         ...(lastMouseMoveEvent.current ?? {}),
         ctrlKey: false,
-      };
-      onDragging?.(newEvent, true, overlay); // event handler is not addded if dragging is not active
+      }
+      onDragging?.(newEvent, true, overlay) // event handler is not addded if dragging is not active
       setUi((current) =>
         ctrlKey !== current?.dragging?.ctrKeyDown
           ? {
@@ -179,31 +191,30 @@ export const CTreeView = (props: CTreeViewProps) => {
               dragging: { ...current.dragging, ctrKeyDown: false },
             }
           : current
-      );
-    };
+      )
+    }
 
     if (ui?.dragging?.active) {
-      document.addEventListener("keydown", keyDownListener);
-      document.addEventListener("keyup", keyUpListener);
-      document.addEventListener("mousemove", mouseMoveListener);
+      document.addEventListener('keydown', keyDownListener)
+      document.addEventListener('keyup', keyUpListener)
+      document.addEventListener('mousemove', mouseMoveListener)
     }
     return () => {
       if (ui?.dragging?.active) {
-        document.addEventListener("keydown", keyDownListener);
-        document.addEventListener("keyup", keyUpListener);
-        document.removeEventListener("mousemove", mouseMoveListener);
+        document.addEventListener('keydown', keyDownListener)
+        document.addEventListener('keyup', keyUpListener)
+        document.removeEventListener('mousemove', mouseMoveListener)
       }
-    };
-  }, [onDragging, overlay, ui?.dragging?.active]);
+    }
+  }, [onDragging, overlay, ui?.dragging?.active])
 
   const handleExpandNode = React.useCallback(
     (id: string) => {
-      console.log("HANDELE EXPAND", id);
-      if (!onToggleExpand) return;
-      onToggleExpand(id, null);
+      if (!onToggleExpand) return
+      onToggleExpand(id, null)
     },
     [onToggleExpand]
-  );
+  )
 
   return (
     <>
@@ -217,8 +228,8 @@ export const CTreeView = (props: CTreeViewProps) => {
           aria-label="tree-view"
           expanded={expandedItems as any}
           onNodeSelect={(e, value) => {
-            if (!onToggleSelect) return;
-            onToggleSelect?.(value, e);
+            if (!onToggleSelect) return
+            onToggleSelect?.(value, e)
           }}
           // onNodeToggle={(e, value) => {
           //   e.stopPropagation();
@@ -240,7 +251,7 @@ export const CTreeView = (props: CTreeViewProps) => {
           // defaultExpandIcon={<Icon path={mdiChevronRight} size={1} />}
           // defaultEndIcon={<div style={{ width: 24 }} />}
           sx={{
-            overflowY: "auto",
+            overflowY: 'auto',
             maxWidth: maxWidth,
             width,
             ...(treeViewProps as any),
@@ -260,9 +271,9 @@ export const CTreeView = (props: CTreeViewProps) => {
         </TreeView>
 
         <DragOverlay modifiers={[restrictToVerticalAxis]}>
-          {overlay && <StyledTreeItem {...overlay} />}
+          {overlay && <StyledTreeItem key="overlay" {...overlay} />}
         </DragOverlay>
       </DndContext>
     </>
-  );
-};
+  )
+}

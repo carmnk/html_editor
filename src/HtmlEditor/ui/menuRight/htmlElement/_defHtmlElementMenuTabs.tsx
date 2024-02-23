@@ -8,15 +8,22 @@ import {
 } from "@mdi/js";
 import Icon, { Stack as IconStack } from "@mdi/react";
 import { Theme } from "@mui/material";
-import { HtmlEditorElementType } from "../../../EditorState";
+import {
+  EditorStateType,
+  ElementType,
+} from "../../../editorController/editorState";
 
 export type HtmlElementMenuTabParams = {
-  selectedHtmlElement: HtmlEditorElementType | null;
+  selectedHtmlElement: ElementType | null;
   theme: Theme;
+  elements: EditorStateType["elements"];
 };
 
 export const makeHtmlElementMenuTabs = (params: HtmlElementMenuTabParams) => {
-  const { selectedHtmlElement, theme } = params;
+  const { selectedHtmlElement, theme, elements } = params;
+  const children = elements?.filter(
+    (el) => el?._parentId === selectedHtmlElement?._id
+  );
   return [
     {
       value: "layout",
@@ -47,10 +54,10 @@ export const makeHtmlElementMenuTabs = (params: HtmlElementMenuTabParams) => {
     {
       value: "content",
       label: <Icon path={mdiTextBox} size={1} />,
-      tooltip: selectedHtmlElement?.children?.length
+      tooltip: children?.length
         ? "Content currently not supported when Element has children"
         : "Content",
-      disabled: !!selectedHtmlElement?.children?.length,
+      disabled: !!children?.length,
     },
     {
       value: "css_rules",

@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react'
 import {
   MenuItem,
   Tooltip,
@@ -7,28 +7,27 @@ import {
   useTheme,
   Divider,
   Typography,
-} from "@mui/material";
-import { SecondaryText } from "../basics/CTypography";
-import Icon from "@mdi/react";
+} from '@mui/material'
+import Icon from '@mdi/react'
 
 export type DropDownMenuItemProps = {
-  onClick: (e: React.MouseEventHandler<HTMLLIElement>) => void;
-  tooltip?: React.ReactNode;
-  icon?: React.ReactNode;
-  id: string;
-  disabled?: boolean;
-  loading?: boolean;
-  label: string;
-  onPointerDown?: any;
-  onKeyDown?: any;
-};
+  onClick: (e: React.MouseEventHandler<HTMLLIElement>) => void
+  tooltip?: React.ReactNode
+  icon?: React.ReactNode
+  id: string
+  disabled?: boolean
+  loading?: boolean
+  label: string
+  onPointerDown?: any
+  onKeyDown?: any
+}
 
 export const SlimDivider = () => (
   <Divider
-    sx={{ mt: "0px !important", mb: "0px !important" }}
-    key={"menu-offer-divider"}
+    sx={{ mt: '0px !important', mb: '0px !important' }}
+    key={'menu-offer-divider'}
   />
-);
+)
 
 export const DropdownMenuItem = (props: DropDownMenuItemProps) => {
   const {
@@ -41,21 +40,21 @@ export const DropdownMenuItem = (props: DropDownMenuItemProps) => {
     label,
     onPointerDown,
     onKeyDown,
-  } = props;
-  const theme = useTheme();
+  } = props
+  const theme = useTheme()
 
   const handleOnClick = React.useCallback(
     (e: any) => {
-      if (disabled || loading) return;
-      onClick(e);
+      if (disabled || loading) return
+      onClick(e)
     },
     [disabled, loading, onClick]
-  );
+  )
 
   return (
     <>
       <MenuItem
-        sx={{ height: 47 }}
+        sx={{ px: 2, py: 1.25 }}
         key={id}
         onClick={handleOnClick}
         disabled={disabled}
@@ -72,14 +71,14 @@ export const DropdownMenuItem = (props: DropDownMenuItemProps) => {
             <Stack
               direction="row"
               alignItems="center"
-              width={loading || icon ? "17px" : 0}
+              width={loading || icon ? '17px' : 0}
             >
               {loading ? (
                 <CircularProgress color="inherit" size={17} />
-              ) : typeof icon === "string" ? (
+              ) : typeof icon === 'string' ? (
                 <Icon
                   path={icon}
-                  size={"20px"}
+                  size={'20px'}
                   color={
                     disabled
                       ? theme.palette.action.disabled
@@ -107,5 +106,5 @@ export const DropdownMenuItem = (props: DropDownMenuItemProps) => {
       </MenuItem>
       <SlimDivider />
     </>
-  );
-};
+  )
+}

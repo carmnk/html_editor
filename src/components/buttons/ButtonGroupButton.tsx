@@ -1,65 +1,83 @@
-import React from "react";
-import { Button, CButtonProps } from "./Button";
-import { Divider, Stack, useTheme } from "@mui/material";
+import React from 'react'
+import { Button, CButtonProps } from './Button/Button'
+import { Divider, Stack, useTheme } from '@mui/material'
+import { ButtonType } from './Button/Types'
 
 export type ButtonGroupButtonProps = Pick<
   CButtonProps,
-  "icon" | "tooltip" | "onClick"
+  'icon' | 'tooltip' | 'onClick'
 > & {
-  value: string;
-  selected: boolean;
-  disabled?: boolean;
-};
+  value: string
+  selected: boolean
+  disabled?: boolean
+  iconButton?: boolean
+  label?: string
+}
 
-export const ButtonGroupButton = (props: ButtonGroupButtonProps) => {
-  const { value, selected, icon, tooltip, onClick, disabled } = props;
+const ButtonGroupButton = (props: ButtonGroupButtonProps) => {
+  const { value, selected, icon, tooltip, onClick, disabled, iconButton, label } =
+    props
   return (
     <Button
-      type={selected ? "primary" : "text"}
-      iconButton={true}
+      type={selected ? ButtonType.primary : ButtonType.text}
+      iconButton={iconButton ?? true}
       icon={icon}
       tooltip={tooltip}
       name={value}
       onClick={onClick}
       disabled={disabled}
+      label={label}
     />
-  );
-};
+  )
+}
 
 export type ButtonGroupProps = {
-  buttons: (Omit<ButtonGroupButtonProps, "selected"> | null)[];
-  value: string;
-  onChange: (value: string) => void;
-  isSelected?: (itemValue: string, groupValue: string) => boolean;
-  transformValue?: (newItemValue: string, currentGroupValue: string) => string;
-};
+  buttons: (Omit<ButtonGroupButtonProps, 'selected'> | null)[]
+  items?: (Omit<ButtonGroupButtonProps, 'selected'> | null)[]
+  iconButtons?: boolean
+  value: string
+  onChange: (value: string) => void
+  isSelected?: (itemValue: string, groupValue: string) => boolean
+  transformValue?: (newItemValue: string, currentGroupValue: string) => string
+}
 
 export const ButtonGroup = (props: ButtonGroupProps) => {
-  const { buttons, value, onChange, isSelected, transformValue } = props;
+  const {
+    buttons,
+    items,
+    value,
+    onChange,
+    isSelected,
+    transformValue,
+    iconButtons,
+  } = props
+  const itemsAdj = items ?? buttons
+  
 
   const handleChange = React.useCallback(
     (newValue: string) => {
-      if (!onChange) return;
+      if (!onChange) return
       const newValueAdj = transformValue
         ? transformValue(newValue, value)
-        : newValue;
-      onChange(newValueAdj);
+        : newValue
+      onChange(newValueAdj)
     },
     [onChange, transformValue, value]
-  );
+  )
 
-  const theme = useTheme();
+  const theme = useTheme()
   return (
     <Stack
       direction="row"
       gap={0.25}
-      border={"1px solid " + theme.palette.divider}
+      border={'1px solid ' + theme.palette.divider}
       width="max-content"
     >
-      {buttons?.map?.((button, bIdx) => {
+      {itemsAdj?.map?.((button, bIdx) => {
         return button ? (
           <ButtonGroupButton
             {...button}
+            iconButton={iconButtons}
             key={bIdx}
             selected={
               isSelected?.(button.value, value) ?? button.value === value
@@ -68,8 +86,8 @@ export const ButtonGroup = (props: ButtonGroupProps) => {
           />
         ) : (
           <Divider orientation="vertical" flexItem key={bIdx} />
-        );
+        )
       }) ?? null}
     </Stack>
-  );
-};
+  )
+}

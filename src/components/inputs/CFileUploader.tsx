@@ -1,6 +1,6 @@
 import React from "react";
 import moment from "moment";
-import { Button } from "../buttons/Button";
+import { Button } from "../buttons/Button/Button";
 import { Box, Stack, useTheme } from "@mui/material";
 import { Label, SecondaryText } from "../basics/CTypography";
 import { useDropzone } from "react-dropzone";

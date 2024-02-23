@@ -199,7 +199,8 @@ export const CTextField = forwardRef((props: CTextFieldProps, ref) => {
         {...rest}
         inputProps={inputProps}
         InputProps={InputProps}
-        FormHelperTextProps={formHelperTextProps}
+        // FormHelperTextProps={formHelperTextProps}
+        
       />
       {injectComponent}
     </Box>

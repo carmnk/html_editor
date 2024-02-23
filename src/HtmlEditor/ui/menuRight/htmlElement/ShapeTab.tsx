@@ -1,44 +1,44 @@
-import { Stack, Typography, Box, useTheme } from "@mui/material";
-import { CGrid } from "../../../../components/basics/CGrid";
-import { ColorPicker } from "../../../../components/color/ColorPicker";
-import { CSelect } from "../../../../components/inputs/CSelect";
-import { HTML_BORDER_STYLES_OPTIONS } from "../../../defs/CssBorderStyleDict";
-import { borderRadiusCornerModeButtons } from "../../defs/_defCssPropertyButtonGroups";
-import { ButtonGroup } from "../../../../components/buttons/ButtonGroupButton";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { EditorControllerType } from "../../../editorController/editorController";
-import { CssSizeSelector } from "./CssSizeSelector";
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { Stack, Typography, Box, useTheme } from '@mui/material'
+import { CGrid } from '../../../../components/basics/CGrid'
+import { ColorPicker } from '../../../../components/color/ColorPicker'
+import { CSelect } from '../../../../components/inputs/CSelect'
+import { HTML_BORDER_STYLES_OPTIONS } from '../../../defs/CssBorderStyleDict'
+import { borderRadiusCornerModeButtons } from '../../defs/_defCssPropertyButtonGroups'
+import { ButtonGroup } from '../../../../components/buttons/ButtonGroupButton'
+import { CssSizeSelector } from './CssSizeSelector'
+import { EditorControllerType } from '../../../editorController/editorControllerTypes'
 
 export type RightMenuShapeTabProps = {
-  editorController: EditorControllerType;
-};
+  editorController: EditorControllerType
+}
 
 const editableProps = [
-  "backgroundColor",
-  "color",
-  "borderColor",
-  "borderStyle",
-  "borderWidth",
-  "borderRadius",
-];
+  'backgroundColor',
+  'color',
+  'borderColor',
+  'borderStyle',
+  'borderWidth',
+  'borderRadius',
+]
 
 export const RightMenuShapeTab = (props: RightMenuShapeTabProps) => {
-  const { editorController } = props;
+  const { editorController } = props
   const {
-    selectedHtmlElement,
-    selectedHtmlElementStyleAttributes: elementStyles,
+    selectedHtmlElement2: selectedHtmlElement,
+    selectedHtmlElementStyleAttributes2: elementStyles,
     actions,
-  } = editorController;
-  const { changeCurrentHtmlElementStyleAttribute } = actions.htmlElement;
-  const theme = useTheme();
+  } = editorController
+  const { changeCurrentHtmlElementStyleAttribute } = actions.htmlElement
+  const theme = useTheme()
 
   const [ui, setUi] = useState({
     borderRadiusCornerMode:
       elementStyles?.borderRadius
         ?.toString?.()
-        ?.split?.(" ")
-        ?.length.toString() ?? "0",
-  });
+        ?.split?.(' ')
+        ?.length.toString() ?? '0',
+  })
 
   const handleChangeStyleProp: { [key: string]: (newValue: string) => void } =
     useMemo(() => {
@@ -46,25 +46,25 @@ export const RightMenuShapeTab = (props: RightMenuShapeTabProps) => {
         return {
           ...acc,
           [propName]: (newValue: string) => {
-            changeCurrentHtmlElementStyleAttribute(newValue, propName);
+            changeCurrentHtmlElementStyleAttribute(newValue, propName)
           },
-        };
-      }, {});
-      return handlers;
-    }, [changeCurrentHtmlElementStyleAttribute]);
+        }
+      }, {})
+      return handlers
+    }, [changeCurrentHtmlElementStyleAttribute])
 
   const handleChangeBorderRadiusCornerMode = useCallback(
     (newValue: string) => {
       if (!parseInt(newValue)) {
-        handleChangeStyleProp.borderRadius("0");
+        handleChangeStyleProp.borderRadius('0')
       }
       setUi((current) => ({
         ...current,
         borderRadiusCornerMode: newValue.toString(),
-      }));
+      }))
     },
     [setUi, handleChangeStyleProp]
-  );
+  )
 
   // reset borderCornerMode when changing element
   useEffect(() => {
@@ -73,16 +73,16 @@ export const RightMenuShapeTab = (props: RightMenuShapeTabProps) => {
       borderRadiusCornerMode:
         elementStyles?.borderRadius
           ?.toString?.()
-          ?.split?.(" ")
-          ?.length?.toString() ?? "0",
-    }));
+          ?.split?.(' ')
+          ?.length?.toString() ?? '0',
+    }))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedHtmlElement?.id]);
+  }, [selectedHtmlElement?._id])
 
   return (
     <>
       {/* Colors */}
-      <Stack gap={2} borderLeft={"1px solid " + theme.palette.divider} p={1}>
+      <Stack gap={2} borderLeft={'1px solid ' + theme.palette.divider} p={1}>
         <Typography fontWeight={700} color="text.primary">
           Colors
         </Typography>
@@ -108,7 +108,7 @@ export const RightMenuShapeTab = (props: RightMenuShapeTabProps) => {
         </Box>
       </Stack>
 
-      <Stack gap={2} borderLeft={"1px solid " + theme.palette.divider} p={1}>
+      <Stack gap={2} borderLeft={'1px solid ' + theme.palette.divider} p={1}>
         <Typography fontWeight={700} color="text.primary">
           Borders
         </Typography>
@@ -117,8 +117,8 @@ export const RightMenuShapeTab = (props: RightMenuShapeTabProps) => {
             {/* BorderWidth */}
             <Box>BorderWidth</Box>
             <CssSizeSelector
-              editorController={editorController}
-              attributeName="borderWidth"
+              sizeValue={elementStyles.borderWidth as string}
+              changeSizeValue={handleChangeStyleProp.borderWidth}
             />
             <Box>Color</Box>
             <Box display="flex" justifyContent="flex-end">
@@ -141,7 +141,7 @@ export const RightMenuShapeTab = (props: RightMenuShapeTabProps) => {
         </Box>
       </Stack>
 
-      <Stack gap={2} borderLeft={"1px solid " + theme.palette.divider} p={1}>
+      <Stack gap={2} borderLeft={'1px solid ' + theme.palette.divider} p={1}>
         <Typography fontWeight={700} color="text.primary">
           BorderRadius
         </Typography>
@@ -150,7 +150,7 @@ export const RightMenuShapeTab = (props: RightMenuShapeTabProps) => {
             <Box>Corners</Box>
             <Box display="flex" justifyContent="flex-end">
               <ButtonGroup
-                value={ui?.borderRadiusCornerMode || "0"}
+                value={ui?.borderRadiusCornerMode || '0'}
                 buttons={borderRadiusCornerModeButtons}
                 onChange={handleChangeBorderRadiusCornerMode}
               />
@@ -159,8 +159,8 @@ export const RightMenuShapeTab = (props: RightMenuShapeTabProps) => {
               <>
                 <Box>Radius</Box>
                 <CssSizeSelector
-                  editorController={editorController}
-                  attributeName="borderRadius"
+                  sizeValue={elementStyles.borderRadius as string}
+                  changeSizeValue={handleChangeStyleProp.borderRadius}
                 />
               </>
             )}
@@ -168,5 +168,5 @@ export const RightMenuShapeTab = (props: RightMenuShapeTabProps) => {
         </Box>
       </Stack>
     </>
-  );
-};
+  )
+}

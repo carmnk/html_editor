@@ -1,9 +1,12 @@
-import { useTheme } from '@mui/material'
+import { Box, useTheme } from '@mui/material'
 import React from 'react'
 
 import { Label } from '../basics/CTypography'
 
-export type TextAreaProps = Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, 'onChange'> & {
+export type TextAreaProps = Omit<
+  React.TextareaHTMLAttributes<HTMLTextAreaElement>,
+  'onChange'
+> & {
   value: string | undefined
   name: string
   onChange?: any
@@ -22,14 +25,14 @@ export type TextAreaProps = Omit<React.TextareaHTMLAttributes<HTMLTextAreaElemen
   disableLabel?: boolean
 }
 
-const requiredFieldText = "This field is required";
+const requiredFieldText = 'This field is required'
 
 export const TextArea = (props: TextAreaProps) => {
   const {
     value,
     name,
     onChange,
-    rows,
+    rows = 3,
     style,
     isError,
     className,
@@ -42,6 +45,7 @@ export const TextArea = (props: TextAreaProps) => {
     injectLabelComponent,
     labelSubtext,
     disableLabel,
+
     ...rest
   } = props
   const addClass = className ? className : ''
@@ -79,7 +83,8 @@ export const TextArea = (props: TextAreaProps) => {
           {injectLabelComponent}
         </div>
       )}
-      <textarea
+      <Box
+        component={'textarea'}
         {...rest}
         value={value}
         name={name}
@@ -87,16 +92,19 @@ export const TextArea = (props: TextAreaProps) => {
         rows={rows}
         onChange={onChange}
         className={`block w-full px-4 py-3 leading-tight text-gray-700 bg-white border appearance-none rounded-md focus:outline-none focus:border-grey-500 ${addClass}`}
-        style={{
-          ...style,
+        sx={{
           borderColor: isError ? theme.palette.error.main : '#dde2ea',
           borderWidth: 1,
           borderStyle: 'solid',
-          fontSize: 14,
-          lineHeight: '16px',
+          borderRadius: 1,
+          p: 2,
+          fontSize: 18,
+          fontFamily: `'Quattrocento Sans',Roboto,Helvetica,Arial,sans-serif`,
+          // fontSize: 14,
+          // lineHeight: '16px',
           height: 'auto',
-          // minHeight: '185px',
-          // color: '#212529',
+          width: '100%',
+          ...style,
         }}
         onBlur={handleChangeCompleted}
         onFocus={handleChangeStarted}

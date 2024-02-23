@@ -1,4 +1,4 @@
-import { ChangeEvent, useMemo, ReactNode, useCallback } from "react";
+import { ChangeEvent, useMemo, ReactNode, useCallback } from 'react'
 import {
   Select,
   MenuItem,
@@ -8,39 +8,39 @@ import {
   SelectProps,
   FormControlProps,
   SelectChangeEvent,
-} from "@mui/material";
-import { Label } from "../basics/CTypography";
-import { BoxProps } from "@mui/system";
+} from '@mui/material'
+import { Label } from '../basics/CTypography'
+import { BoxProps } from '@mui/system'
 
-export type CSelectProps = Omit<SelectProps, "onChange"> & {
-  disableTopPadding?: boolean;
-  value?: string | number | boolean | null;
-  options?: { value: string | number | boolean; label: string }[];
-  isError?: boolean;
-  isDisabled?: boolean;
-  required?: boolean;
-  label?: ReactNode;
-  disableHelperText?: boolean;
-  disableLabel?: boolean;
-  labelSx?: BoxProps["sx"];
-  ContainerProps?: FormControlProps;
+export type CSelectProps = Omit<SelectProps, 'onChange'> & {
+  disableTopPadding?: boolean
+  value?: string | number | boolean | null
+  options?: { value: string | number | boolean; label: string }[]
+  isError?: boolean
+  isDisabled?: boolean
+  required?: boolean
+  label?: ReactNode
+  disableHelperText?: boolean
+  disableLabel?: boolean
+  labelSx?: BoxProps['sx']
+  ContainerProps?: FormControlProps
   onChange?:
     | ((newValue: string, e: ChangeEvent<HTMLInputElement>) => void)
     | ((newValue: number, e: ChangeEvent<HTMLInputElement>) => void)
-    | ((newValue: boolean, e: ChangeEvent<HTMLInputElement>) => void);
-  locked?: boolean;
-  helperText?: string;
-  disableHelperTextTheming?: boolean;
-};
+    | ((newValue: boolean, e: ChangeEvent<HTMLInputElement>) => void)
+  locked?: boolean
+  helperText?: string
+  disableHelperTextTheming?: boolean
+}
 
-const requiredFieldText = "This field is required";
+const requiredFieldText = 'This field is required'
 
 const menuItemStyles = {
   fontSize: 14,
-  lineHeight: "16px",
-  color: "#212529",
+  lineHeight: '16px',
+  color: '#212529',
   minHeight: { xs: 28 },
-};
+}
 
 export const CSelect = (props: CSelectProps) => {
   const {
@@ -61,46 +61,58 @@ export const CSelect = (props: CSelectProps) => {
     helperText,
     disableHelperTextTheming,
     ...rest
-  } = props;
-  const isDisabledAdj = isDisabled || locked;
+  } = props
+  const isDisabledAdj = isDisabled || locked
 
-  const theme = useTheme();
+  const theme = useTheme()
   const handleChange = useCallback(
     (e: SelectChangeEvent) => {
-      const value = e?.target?.value;
+      const value = e?.target?.value
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      onChange?.(value as never, e as any);
+      onChange?.(value as never, e as any)
     },
     [onChange]
-  );
+  )
 
   const themeErrorText = useMemo(() => {
     return {
       color: theme.palette.error.main,
       fontWeight: 700,
-    };
-  }, [theme.palette.error.main]);
+    }
+  }, [theme.palette.error.main])
 
   const selectStyles = useMemo(() => {
     return {
       height: 32,
       pt: !disableTopPadding ? 1 : 0,
-      width: "100%",
+      width: '100%',
       fontSize: 14,
-      lineHeight: "16px",
+      lineHeight: '16px',
       ...(props?.sx ?? {}),
-    };
-  }, [props?.sx, disableTopPadding]);
+    }
+  }, [props?.sx, disableTopPadding])
 
   const formHelperTextStyles = useMemo(() => {
     return {
       ...(props?.sx ?? {}),
       ...(isError ? themeErrorText : {}),
-    };
-  }, [props?.sx, isError, themeErrorText]);
+    }
+  }, [props?.sx, isError, themeErrorText])
+
+  const containerPropsAdj = useMemo(() => {
+    return {
+      ...(ContainerProps ?? {}),
+      sx: {
+        ...(ContainerProps?.sx ?? {}),
+        // display: 'flex',
+        // flexDirection: 'column',
+        width: '100%',
+      },
+    }
+  }, [ContainerProps])
 
   return (
-    <FormControl className="flex flex-col w-full" {...ContainerProps}>
+    <FormControl {...(containerPropsAdj as any)}>
       {!disableLabel && (
         <Label
           className="pb-2 pl-0.5"
@@ -113,7 +125,7 @@ export const CSelect = (props: CSelectProps) => {
       )}
       <Select
         {...rest}
-        value={value ?? ""}
+        value={value ?? ''}
         onChange={handleChange as any}
         error={!!isError}
         size="small"
@@ -130,9 +142,9 @@ export const CSelect = (props: CSelectProps) => {
       </Select>
       {!disableHelperText && (
         <FormHelperText sx={formHelperTextStyles}>
-          {helperText ?? (isError ? requiredFieldText : " ")}
+          {helperText ?? (isError ? requiredFieldText : ' ')}
         </FormHelperText>
       )}
     </FormControl>
-  );
-};
+  )
+}

@@ -1,7 +1,7 @@
 import * as LibNamespace from "@mdi/js";
 export const a = 1;
 
-const iconNames = Object.keys(LibNamespace)?.slice(0, 100);
+export const iconNames = Object.keys(LibNamespace)?.slice(0, 100);
 export const iconOptions = iconNames.map((name) => ({
   label: name,
   value: name,

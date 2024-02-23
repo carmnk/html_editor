@@ -1,34 +1,34 @@
-import { Stack, useTheme } from "@mui/material";
-import { useCallback } from "react";
-import { EditorControllerType } from "../../../editorController/editorController";
-import { ClickTextField } from "../../../../components/inputs/ClickTextField";
-import { GenericForm } from "../../../../components/forms/GenericForm";
+import { Stack, useTheme } from '@mui/material'
+import { useCallback } from 'react'
+import { ClickTextField } from '../../../../components/inputs/ClickTextField'
+import { GenericForm } from '../../../../components/forms/GenericForm'
+import { EditorControllerType } from '../../../editorController/editorControllerTypes'
 
 export type HtmlElementMenuProps = {
-  editorController: EditorControllerType;
-};
+  editorController: EditorControllerType
+}
 
 export const PageMenu = (props: HtmlElementMenuProps) => {
-  const { editorController } = props;
-  const { editorState, actions } = editorController;
-  const { selectedPage } = editorState;
+  const { editorController } = props
+  const { editorState, actions } = editorController
+  const { page: selectedPage } = editorState.ui.selected
   const {
-    changeCurrentHtmlElementProp,
-    handleChangeComponentProp,
+    changeCurrentElementProp,
+    changeSelectedComponentProp,
     changeCurrentHtmlElementAttribute,
-  } = actions.htmlElement;
+  } = actions.htmlElement
 
-  const theme = useTheme();
+  const theme = useTheme()
 
   // HANDLERS
 
   const handleChangeElementId = useCallback(
     (value: string) => {
-      const propName = "userID";
-      changeCurrentHtmlElementProp(propName as any, value);
+      const propName = '_userID'
+      changeCurrentElementProp(propName as any, value)
     },
-    [changeCurrentHtmlElementProp]
-  );
+    [changeCurrentElementProp]
+  )
 
   // const handleChangeProp = useCallback(
   //   (
@@ -39,40 +39,36 @@ export const PageMenu = (props: HtmlElementMenuProps) => {
   //     subformName?: string
   //   ) => {
   //     if (subformName) {
-  //       handleChangeComponentProp(subformName, newFormData?.[subformName]);
+  //       changeSelectedComponentProp(subformName, newFormData?.[subformName]);
   //       return;
   //     }
-  //     handleChangeComponentProp(key, value);
+  //     changeSelectedComponentProp(key, value);
   //   },
-  //   [handleChangeComponentProp]
+  //   [changeSelectedComponentProp]
   // );
+
+  const handleRenamePage = useCallback(
+    (pageName: string) => {
+      if (!selectedPage) return
+      actions.project.renameHtmlPage(selectedPage, pageName)
+    },
+    [selectedPage, actions.project]
+  )
 
   return (
     <>
       <Stack
         gap={2}
-        borderLeft={"1px solid " + theme.palette.divider}
+        borderLeft={'1px solid ' + theme.palette.divider}
         // height="100%"
         p={1}
-        maxWidth={320}
       >
         <ClickTextField
-          value={selectedPage}
-          onChange={handleChangeElementId}
-          disabled={true}
+          value={selectedPage ?? ''}
+          onChange={handleRenamePage}
+          disabled={selectedPage === 'index'}
         />
-
-        {/* <GenericForm
-          {...selectedComponent?.formGen?.(editorController, selectedComponent)}
-          formData={selectedComponent?.props}
-          onChangeFormData={handleChangeProp}
-        /> */}
-        {/* {Object.entries(selectedComponent?.props ?? {}).map(([key, value]) => (
-          <Box>
-            {key} - {value}
-          </Box>
-        ))} */}
       </Stack>
     </>
-  );
-};
+  )
+}

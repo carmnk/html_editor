@@ -1,55 +1,56 @@
-import { Box, Stack, TextField } from "@mui/material";
-import { sizePreSelectButtons } from "../../defs/_defCssPropertyButtonGroups";
-import { ButtonGroup } from "../../../../components/buttons/ButtonGroupButton";
-import { CSSProperties, useCallback, useState } from "react";
-import { EditorControllerType } from "../../../editorController/editorController";
+import { Box, Stack, TextField } from '@mui/material'
+import { sizePreSelectButtons } from '../../defs/_defCssPropertyButtonGroups'
+import { ButtonGroup } from '../../../../components/buttons/ButtonGroupButton'
+import { CSSProperties, useCallback, useState } from 'react'
+import { EditorControllerType } from '../../../editorController/editorControllerTypes'
+import { Flex } from '../../../../components/basics/Flex'
 
 export type CssSizeSelectorProps = {
-  editorController: EditorControllerType;
-  attributeName: string;
-  defaultSizeMode?: string;
-};
+  // editorController: EditorControllerType
+  // attributeName: string
+  defaultSizeMode?: string
+
+  sizeValue: string
+  changeSizeValue: (newValue: string) => void
+}
 
 export const CssSizeSelector = (props: CssSizeSelectorProps) => {
-  const { editorController, attributeName, defaultSizeMode } = props;
-  const { selectedHtmlElementStyleAttributes: elementStyles, actions } =
-    editorController;
-  const { changeCurrentHtmlElementStyleAttribute } = actions.htmlElement;
+  const {
+    // editorController,
+    // attributeName,
+    defaultSizeMode,
+    sizeValue,
+    changeSizeValue,
+  } = props
+  // const { selectedHtmlElementStyleAttributes2: elementStyles, actions } =
+  //   editorController
 
-  const [ui, setUi] = useState({ sizeMode: defaultSizeMode ?? "px" });
+  // const { changeCurrentHtmlElementStyleAttribute } = actions.htmlElement
+
+  const [ui, setUi] = useState({ sizeMode: defaultSizeMode ?? 'px' })
 
   const handleChangeSize = useCallback(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (e: any) => {
-      const newValue = e?.target?.value?.replace(/\D/g, "");
-      changeCurrentHtmlElementStyleAttribute(
-        newValue + ui?.sizeMode,
-        attributeName
-      );
+      const newValue = e?.target?.value?.replace(/\D/g, '')
+      changeSizeValue?.(newValue + ui?.sizeMode)
     },
-    [changeCurrentHtmlElementStyleAttribute, ui?.sizeMode, attributeName]
-  );
+    [changeSizeValue, ui?.sizeMode]
+  )
 
   const handleChangeSizeMode = useCallback(
     (newValue: string) => {
       setUi((current) => ({
         ...current,
         sizeMode: newValue,
-      }));
-      const size = elementStyles?.[attributeName as keyof CSSProperties]
-        ?.toString?.()
-        ?.replace?.(/\D/g, "");
-      if (!size) return;
-      const val = size + newValue;
-      changeCurrentHtmlElementStyleAttribute(val, attributeName);
+      }))
+      const size = sizeValue?.toString?.()?.replace?.(/\D/g, '')
+      if (!size) return
+      const val = size + newValue
+      changeSizeValue?.(val)
+      // changeCurrentHtmlElementStyleAttribute(val, attributeName)
     },
-    [
-      elementStyles,
-      attributeName,
-      changeCurrentHtmlElementStyleAttribute,
-      setUi,
-    ]
-  );
+    [changeSizeValue, setUi, sizeValue]
+  )
 
   return (
     <Box>
@@ -60,11 +61,10 @@ export const CssSizeSelector = (props: CssSizeSelectorProps) => {
           onChange={handleChangeSizeMode}
         />
       </Box>
-      {ui?.sizeMode !== "auto" && (
-        <Stack
-          direction="row"
+      {ui?.sizeMode !== 'auto' && (
+        <Flex
           mt={0.5}
-          width={"100%"}
+          width={'100%'}
           alignItems="center"
           justifyContent="flex-end"
           gap={0.5}
@@ -74,17 +74,13 @@ export const CssSizeSelector = (props: CssSizeSelectorProps) => {
               size="small"
               inputProps={{ sx: { p: 0.5, px: 1 } }}
               onChange={handleChangeSize}
-              value={
-                elementStyles?.[attributeName as keyof CSSProperties]
-                  ?.toString?.()
-                  ?.replace(/\D/g, "") ?? ""
-              }
+              value={sizeValue?.toString?.()?.replace(/\D/g, '') ?? ''}
               // placeholder="0"
             />
           </Box>
           {ui?.sizeMode.toString()}
-        </Stack>
+        </Flex>
       )}
     </Box>
-  );
-};
+  )
+}

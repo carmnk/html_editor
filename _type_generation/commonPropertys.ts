@@ -1,0 +1,85 @@
+export const htmlFormAttributes = [
+  'formTarget',
+  'formNoValidate',
+  'formMethod',
+  'formEncType',
+  'formAction',
+]
+export const htmlCommonAttributes = [
+  'className',
+  'id',
+  'style',
+  'title',
+  'tabIndex',
+  'role',
+  'lang',
+  'dir',
+  'access',
+]
+
+export const htmlGlobalAttributes = [
+  'accessKey',
+  'form',
+  'content',
+  'contentEditable',
+  'contextMenu',
+  'dir',
+  'draggable',
+  'dropzone',
+  'hidden',
+  'inputMode',
+  'id',
+  'lang',
+  'security',
+  'spellcheck',
+  'style',
+  'tabIndex',
+  'title',
+  'translate',
+  'spellCheck',
+  'about',
+  'datatype',
+  'resource',
+  'rel',
+  'inert',
+]
+
+export const reactCommonProps = [
+  'children',
+  'dangerouslySetInnerHTML',
+  'key',
+  'ref',
+  'suppressHydrationWarning',
+  'suppressContentEditableWarning',
+]
+
+export const reactCommonMuiProps = [
+  'classes',
+  'sx',
+  'slot',
+  'slotProps',
+  'component',
+  'nonce',
+  'legacyContext',
+  'typeof',
+  'vocab',
+  'is',
+  'itemID',
+  'itemProp',
+  'itemRef',
+  'itemScope',
+  'itemType',
+  'prefix',
+  'rev',
+]
+
+export const propertiesToFilter = [
+  ...htmlFormAttributes,
+  ...htmlCommonAttributes,
+  ...htmlGlobalAttributes,
+  ...reactCommonProps,
+  ...reactCommonMuiProps,
+  'onClick',
+  'onKeyDown',
+  'onPointerDown',
+]

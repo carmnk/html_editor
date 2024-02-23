@@ -1,75 +1,86 @@
-import { Box, Stack, Typography } from "@mui/material";
+import { Box, Stack, Typography } from '@mui/material'
 import {
   CTreeView,
   CTreeViewProps,
-} from "../../../components/treeview/CTreeView";
-import { mdiFolder, mdiImage, mdiPackage } from "@mdi/js";
-import { EditorControllerType } from "../../editorController/editorController";
-import { useEffect, useMemo } from "react";
-import { FileUploader } from "../../../components/inputs/CFileUploader";
-import { ButtonSmallIconButton } from "../../../components/buttons/ButtonSmallIconButton";
+} from '../../../components/treeview/CTreeView'
+import { mdiDelete, mdiFolder, mdiImage, mdiPackage } from '@mdi/js'
+import { useEffect, useMemo } from 'react'
+import { FileUploader } from '../../../components/inputs/CFileUploader'
+import { ButtonSmallIconButton } from '../ButtonSmallIconButton'
+import { EditorControllerType } from '../../editorController/editorControllerTypes'
 
 export type AssetsTabProps = {
-  editorController: EditorControllerType;
-};
+  editorController: EditorControllerType
+}
 
 export const AssetsTab = (props: AssetsTabProps) => {
-  const { editorController } = props;
-  const { editorState, setEditorState, actions } = editorController;
-  const { handleProvidedImageFile, handleDeleteImageFile } = actions.assets;
-  const { handleSelectImage } = actions.ui;
+  const { editorController } = props
+  const { editorState, setEditorState, actions } = editorController
+  const { handleProvidedImageFile, deleteImageFile } = actions.assets
+  const { selectImage } = actions.ui
 
   const treeViewProps: CTreeViewProps = useMemo(() => {
-    const workspaceImageTreeItems = Object.keys(
-      editorState.imageWorkspaces
-    ).map((imageWs) => {
-      const imageData = editorState.imageWorkspaces[imageWs];
-      return {
-        key: imageWs,
-        nodeId: imageWs,
-        labelText: imageWs,
+    const workspaceImageTreeItems = [
+      {
+        _parentId: null,
+        key: 'common',
+        nodeId: 'common',
+        labelText: 'common',
         disableAddAction: true, // false!
-        disableDeleteAction: imageWs === "common",
+        disableDeleteAction: true, // imageWs === 'common',
         icon: mdiFolder,
-        children: Object.keys(imageData).map((imageId) => ({
-          nodeId: imageId,
-          labelText: imageData[imageId].fileName,
-          disableAddAction: true,
-          disableDeleteAction: false,
-          icon: mdiImage,
-        })),
-      };
-    });
+        children: editorState.assets.images.map((image) => {
+          // const imageData =
+          return {
+            nodeId: image._id,
+            labelText: image.fileName,
+            disableAddAction: true,
+            disableDeleteAction: false,
+            icon: mdiImage,
+            _parentId: 'common',
+          }
+        }),
+      },
+    ]
     return {
       items: workspaceImageTreeItems,
-      expandedItems: ["common"],
+      expandedItems: ['common'],
       // maxWidth: 220,
       onToggleSelect: (newValue: string) => {
-        handleSelectImage(newValue);
+        selectImage(newValue)
       },
-      onDelete: handleDeleteImageFile,
-    };
-  }, [editorState.imageWorkspaces, handleDeleteImageFile, handleSelectImage]);
+      actions: (item: any) =>
+        item?._parentId && [
+          {
+            action: deleteImageFile as any,
+            tooltip: 'Delete Image',
+            icon: mdiDelete,
+            label: 'Delete Image',
+          },
+        ],
+      onDelete: deleteImageFile,
+    }
+  }, [editorState.assets.images, deleteImageFile, selectImage])
 
   // reset selected image when switching tabs // better only switch if tab content no longer exists
   useEffect(() => {
     return () => {
       setEditorState((current) => ({
         ...current,
-        selectedImage: null,
-      }));
-    };
+        ui: {
+          ...current.ui,
+          selected: {
+            ...current.ui.selected,
+            image: null,
+          },
+        },
+      }))
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [])
 
   return (
-    <Stack
-      gap={2}
-      // borderLeft={"1px solid " + theme.palette.divider}
-      height="100%"
-      pr={2}
-      width={320}
-    >
+    <Stack gap={2} height="100%">
       <Box flexGrow={1} mt={0.5} ml={1}>
         <Box>
           <Stack
@@ -109,5 +120,5 @@ export const AssetsTab = (props: AssetsTabProps) => {
         </Box>
       </Box>
     </Stack>
-  );
-};
+  )
+}
